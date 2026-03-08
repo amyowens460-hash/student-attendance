@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ប្រព័ន្ធគ្រប់គ្រងអវត្តមានសិស្ស</title>
+    <style>
+        body { font-family: 'Khmer OS Battambang', sans-serif; background-color: #121212; color: #ffffff; margin: 20px; }
+        h2, h3 { text-align: center; color: #ffffff; }
+        
+        .controls-container, .add-student-container, .report-controls {
+            display: flex; justify-content: flex-start; align-items: center;
+            margin-bottom: 15px; flex-wrap: wrap; gap: 10px;
+            background-color: #1e1e1e; padding: 15px; border-radius: 8px; border: 1px solid #444444;
+        }
+
+        input[type="date"], input[type="text"], input[type="month"], select {
+            background-color: #333333; color: #ffffff; border: 1px solid #666666;
+            padding: 8px 12px; border-radius: 4px; font-family: inherit; width: 100%; max-width: 180px;
+        }
+        input:focus, select:focus { outline: none; border-color: #ffffff; }
+
+        .search-box { margin-left: auto; }
+
+        table { width: 100%; border-collapse: collapse; background-color: #1e1e1e; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(255,255,255,0.05); }
+        th, td { padding: 12px; border: 1px solid #444444; text-align: center; font-size: 14px; }
+        th { background-color: #000000; color: #ffffff; white-space: nowrap; }
+
+        .btn { padding: 8px 15px; border: none; cursor: pointer; border-radius: 4px; font-family: 'Khmer OS Battambang', sans-serif; transition: 0.3s; }
+        
+        .btn-present, .btn-absent { background-color: #333333; color: #ffffff; border: 1px solid #555555; margin: 2px; }
+        .active-present { background-color: #ffffff !important; color: #000000 !important; font-weight: bold; }
+        .active-absent { background-color: #555555 !important; color: #ffffff !important; border: 1px solid #ffffff; }
+
+        .btn-edit { background-color: #ffc107; color: #000; padding: 6px 10px; font-size: 13px; font-weight: bold; }
+        .btn-delete { background-color: #dc3545; color: #fff; padding: 6px 10px; font-size: 13px; font-weight: bold; }
+        .action-btns { display: flex; gap: 5px; justify-content: center; }
+
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-save { background-color: #ffffff; color: #000000; padding: 12px 20px; font-size: 16px; font-weight: bold; width: 100%; border-radius: 5px; }
+        .btn-print { background-color: #17a2b8; color: #ffffff; padding: 12px 20px; font-size: 16px; font-weight: bold; width: 100%; border-radius: 5px; }
+        .btn-add { background-color: #4CAF50; color: white; width: auto; font-weight: bold; }
+        .btn-update { background-color: #ffc107; color: #000; width: auto; font-weight: bold; }
+        .btn-view { background-color: #007bff; color: white; padding: 6px 10px; font-size: 13px; }
+        .btn-reset { background-color: #6c757d; color: white; padding: 8px 15px; font-size: 14px; }
+        
+        .btn-generate { background-color: #28a745; color: white; padding: 8px 15px; font-weight: bold; }
+        .btn-print-report { background-color: #17a2b8; color: white; padding: 8px 15px; font-weight: bold; display: none; }
+
+        .history-container, .monthly-report-container { margin-top: 40px; padding-top: 20px; border-top: 2px dashed #444; }
+        .filter-history { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .report-section { display: none; } 
+        .report-header { text-align: center; display: none; margin-bottom: 20px; }
+
+        @media print {
+            body { background-color: #ffffff !important; color: #000000 !important; margin: 0; }
+            input, select, button { display: none !important; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            th, td { border: 1px solid #000000 !important; padding: 8px; color: #000000 !important; font-size: 13px; }
+            th { background-color: #f2f2f2 !important; color: #000000 !important; }
+
+            body.print-daily .add-student-container, body.print-daily .controls-container, 
+            body.print-daily .history-container, body.print-daily .monthly-report-container { display: none !important; }
+            body.print-daily th:nth-child(8), body.print-daily td:nth-child(8) { display: none !important; } 
+            body.print-daily .btn-present:not(.active-present), body.print-daily .btn-absent:not(.active-absent) { display: none !important; }
+            body.print-daily .active-present, body.print-daily .active-absent { display: block !important; border: none; background: transparent !important; color: #000 !important; padding: 0; font-weight: bold; }
+
+            body.print-monthly > * { display: none !important; } 
+            body.print-monthly .monthly-report-container { display: block !important; border: none; margin: 0; padding: 0; } 
+            body.print-monthly .monthly-report-container h3, 
+            body.print-monthly .report-controls { display: none !important; } 
+            body.print-monthly .report-section { display: block !important; }
+            body.print-monthly .report-header { display: block !important; text-align: center; color: #000 !important; margin-bottom: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <h2>បញ្ជីវត្តមានសិស្សប្រចាំថ្ងៃ</h2>
+    
+    <div class="controls-container">
+        <div><label for="date">កាលបរិច្ឆេទ: </label><input type="date" id="date" name="date"></div>
+        <div>
+            <label for="timeSlot">ម៉ោងសិក្សា: </label>
+            <select id="timeSlot">
+                <option value="">-- ជ្រើសរើសម៉ោង --</option>
+                <optgroup label="ពេលព្រឹក">
+                    <option value="៧:០០ - ៨:០០ (ព្រឹក)">៧:០០ - ៨:០០</option>
+                    <option value="៨:០០ - ៩:០០ (ព្រឹក)">៨:០០ - ៩:០០</option>
+                    <option value="៩:០០ - ១០:០០ (ព្រឹក)">៩:០០ - ១០:០០</option>
+                    <option value="១០:០០ - ១១:០០ (ព្រឹក)">១០:០០ - ១១:០០</option>
+                </optgroup>
+                <optgroup label="ពេលរសៀល">
+                    <option value="២:០០ - ៣:០០ (រសៀល)">២:០០ - ៣:០០</option>
+                    <option value="៣:០០ - ៤:០០ (រសៀល)">៣:០០ - ៤:០០</option>
+                </optgroup>
+            </select>
+        </div>
+        <div class="search-box"><input type="text" id="searchInput" onkeyup="searchStudent()" placeholder="ស្វែងរកឈ្មោះ..."></div>
+    </div>
+
+    <div class="add-student-container">
+        <div><label style="font-weight: bold;">បញ្ចូលសិស្សថ្មី៖ </label></div>
+        <input type="text" id="newStuId" placeholder="អត្តលេខ (ឧ. S004)">
+        <input type="text" id="newStuName" placeholder="ឈ្មោះសិស្ស">
+        <select id="newStuGender"><option value="ប្រុស">ប្រុស</option><option value="ស្រី">ស្រី</option></select>
+        <div style="display: flex; flex-direction: column;">
+            <span style="font-size: 12px; color: #aaa;">ថ្ងៃខែឆ្នាំកំណើត</span>
+            <input type="date" id="newStuDob">
+        </div>
+        <input type="text" id="newStuGrade" placeholder="ថ្នាក់ទី (ឧ. ១០ ក)">
+        <button id="btnAddUpdate" class="btn btn-add" onclick="addOrUpdateStudent()">+ បញ្ចូលសិស្ស</button>
+    </div>
+
+    <table id="mainTable">
+        <thead>
+            <tr>
+                <th>ល.រ</th><th>អត្តលេខ</th><th>ឈ្មោះសិស្ស</th><th>ភេទ</th>
+                <th>ថ្ងៃ/ខែ/ឆ្នាំ កំណើត</th><th>ថ្នាក់ទី</th><th>ស្ថានភាពវត្តមាន</th><th>សកម្មភាព</th>
+            </tr>
+        </thead>
+        <tbody id="studentTable">
+            <tr>
+                <td class="stu-index">១</td><td class="stu-id">S001</td><td class="stu-name">សុខ សាន្ត</td><td class="stu-gender">ប្រុស</td>
+                <td class="stu-dob">12/04/2005</td><td class="stu-grade">១០ ក</td>
+                <td>
+                    <button class="btn btn-present" onclick="markStatus(this, 'present')">វត្តមាន</button>
+                    <button class="btn btn-absent" onclick="markStatus(this, 'absent')">អវត្តមាន</button>
+                </td>
+                <td class="action-btns">
+                    <button class="btn btn-edit" onclick="editStudent(this)">កែប្រែ</button>
+                    <button class="btn btn-delete" onclick="deleteStudent(this)">លុប</button>
+                </td>
+            </tr>
+            <tr>
+                <td class="stu-index">២</td><td class="stu-id">S002</td><td class="stu-name">ចាន់ ធីតា</td><td class="stu-gender">ស្រី</td>
+                <td class="stu-dob">25/08/2006</td><td class="stu-grade">១០ ក</td>
+                <td>
+                    <button class="btn btn-present" onclick="markStatus(this, 'present')">វត្តមាន</button>
+                    <button class="btn btn-absent" onclick="markStatus(this, 'absent')">អវត្តមាន</button>
+                </td>
+                <td class="action-btns">
+                    <button class="btn btn-edit" onclick="editStudent(this)">កែប្រែ</button>
+                    <button class="btn btn-delete" onclick="deleteStudent(this)">លុប</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="btn-group">
+        <button class="btn btn-save" onclick="saveData()">រក្សាទុកទិន្នន័យអវត្តមាន</button>
+        <button class="btn btn-print" onclick="printDailyReport()">🖨️ បោះពុម្ពវត្តមានថ្ងៃនេះ</button>
+    </div>
+
+    <div class="history-container">
+        <h3>ប្រវត្តិអវត្តមានដែលបានរក្សាទុក</h3>
+        <div class="filter-history">
+            <label for="filterMonth">ស្វែងរកតាមខែ៖ </label>
+            <input type="month" id="filterMonth" onchange="filterHistoryByMonth()">
+            <button class="btn btn-reset" onclick="resetHistoryFilter()">បង្ហាញទាំងអស់</button>
+            <button class="btn btn-delete" style="margin-left: auto;" onclick="clearHistory()">សម្អាតប្រវត្តិទាំងអស់</button>
+        </div>
+        <table>
+            <thead>
+                <tr><th>កាលបរិច្ឆេទ (ថ្ងៃ/ខែ/ឆ្នាំ)</th><th>ម៉ោងសិក្សា</th><th>ចំនួនសិស្សវត្តមាន</th><th>ចំនួនសិស្សអវត្តមាន</th><th>សកម្មភាព</th></tr>
+            </thead>
+            <tbody id="historyTable"></tbody>
+        </table>
+    </div>
+
+    <div class="monthly-report-container">
+        <h3>📊 របាយការណ៍សរុបវត្តមានប្រចាំខែ</h3>
+        <div class="report-controls">
+            <label>ជ្រើសរើសខែដើម្បីបូកសរុប៖ </label>
+            <input type="month" id="reportMonthInput">
+            <button class="btn btn-generate" onclick="generateMonthlyReport()">បង្កើតរបាយការណ៍</button>
+            <button id="btnPrintReport" class="btn btn-print-report" onclick="printMonthlyReport()">🖨️ បោះពុម្ពរបាយការណ៍</button>
+        </div>
+
+        <div class="report-section" id="monthlyReportContainer">
+            <div class="report-header">
+                <h2>របាយការណ៍វត្តមានសិស្សប្រចាំខែ</h2>
+                <h4 id="reportTitleMonth">ខែ/ឆ្នាំ: </h4>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ល.រ</th>
+                        <th>អត្តលេខ</th>
+                        <th>ឈ្មោះសិស្ស</th>
+                        <th>ភេទ</th>
+                        <th>ថ្នាក់ទី</th>
+                        <th style="background-color: #155724; color: #d4edda;">វត្តមានសរុប</th>
+                        <th style="background-color: #721c24; color: #f8d7da;">អវត្តមានសរុប</th>
+                        <th>សរុបម៉ោងសិក្សា</th>
+                    </tr>
+                </thead>
+                <tbody id="monthlyReportBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let studentCount = 2; 
+        let editingRow = null; 
+
+        // មុខងារបំប្លែង ឆ្នាំ-ខែ-ថ្ងៃ (YYYY-MM-DD) ទៅជា ថ្ងៃ/ខែ/ឆ្នាំ (DD/MM/YYYY)
+        function formatDateToKhmer(dateStr) {
+            if (!dateStr || dateStr === "មិនបានបញ្ជាក់") return dateStr;
+            let parts = dateStr.split('-');
+            if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            return dateStr;
+        }
+
+        // មុខងារបំប្លែង ថ្ងៃ/ខែ/ឆ្នាំ (DD/MM/YYYY) ទៅជា ឆ្នាំ-ខែ-ថ្ងៃ (YYYY-MM-DD) ត្រឡប់វិញសម្រាប់ពេល Edit
+        function parseDateFromKhmer(dateStr) {
+            if (!dateStr || dateStr === "មិនបានបញ្ជាក់") return "";
+            let parts = dateStr.split('/');
+            if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            return dateStr;
+        }
+
+        window.onload = function() { loadHistory(); };
+
+        function addOrUpdateStudent() {
+            let id = document.getElementById("newStuId").value;
+            let name = document.getElementById("newStuName").value;
+            let gender = document.getElementById("newStuGender").value;
+            let dobRaw = document.getElementById("newStuDob").value;
+            let grade = document.getElementById("newStuGrade").value;
+
+            if(id.trim() === "" || name.trim() === "") { alert("សូមបញ្ចូលអត្តលេខ និងឈ្មោះសិស្ស!"); return; }
+            
+            // បំប្លែងថ្ងៃខែទៅជាទម្រង់ ថ្ងៃ/ខែ/ឆ្នាំ មុននឹងបញ្ចូលក្នុងតារាង
+            let dob = dobRaw ? formatDateToKhmer(dobRaw) : "មិនបានបញ្ជាក់";
+            if(grade.trim() === "") grade = "មិនបានបញ្ជាក់";
+
+            if (editingRow) {
+                editingRow.querySelector(".stu-id").innerText = id;
+                editingRow.querySelector(".stu-name").innerText = name;
+                editingRow.querySelector(".stu-gender").innerText = gender;
+                editingRow.querySelector(".stu-dob").innerText = dob;
+                editingRow.querySelector(".stu-grade").innerText = grade;
+                editingRow = null;
+                let btn = document.getElementById("btnAddUpdate");
+                btn.innerText = "+ បញ្ចូលសិស្ស"; btn.classList.replace("btn-update", "btn-add");
+            } else {
+                studentCount++;
+                let table = document.getElementById("studentTable");
+                let row = document.createElement("tr");
+                row.innerHTML = `<td class="stu-index">${studentCount}</td><td class="stu-id">${id}</td><td class="stu-name">${name}</td><td class="stu-gender">${gender}</td><td class="stu-dob">${dob}</td><td class="stu-grade">${grade}</td><td><button class="btn btn-present" onclick="markStatus(this, 'present')">វត្តមាន</button> <button class="btn btn-absent" onclick="markStatus(this, 'absent')">អវត្តមាន</button></td><td class="action-btns"><button class="btn btn-edit" onclick="editStudent(this)">កែប្រែ</button> <button class="btn btn-delete" onclick="deleteStudent(this)">លុប</button></td>`;
+                table.appendChild(row); updateIndex(); 
+            }
+            document.getElementById("newStuId").value = ""; document.getElementById("newStuName").value = ""; document.getElementById("newStuDob").value = ""; document.getElementById("newStuGrade").value = "";
+        }
+
+        function editStudent(button) {
+            let row = button.closest("tr");
+            document.getElementById("newStuId").value = row.querySelector(".stu-id").innerText;
+            document.getElementById("newStuName").value = row.querySelector(".stu-name").innerText;
+            document.getElementById("newStuGender").value = row.querySelector(".stu-gender").innerText;
+            
+            // បំប្លែងពី ថ្ងៃ/ខែ/ឆ្នាំ មកជា ឆ្នាំ-ខែ-ថ្ងៃ វិញ ដើម្បីដាក់ចូលប្រអប់ input[type="date"]
+            let dobValue = row.querySelector(".stu-dob").innerText; 
+            document.getElementById("newStuDob").value = parseDateFromKhmer(dobValue);
+            
+            let gradeValue = row.querySelector(".stu-grade").innerText; 
+            document.getElementById("newStuGrade").value = (gradeValue === "មិនបានបញ្ជាក់") ? "" : gradeValue;
+            
+            editingRow = row; let btn = document.getElementById("btnAddUpdate"); btn.innerText = "✓ រក្សាទុកការកែប្រែ"; btn.classList.replace("btn-add", "btn-update");
+        }
+
+        function deleteStudent(button) { if(confirm("តើអ្នកពិតជាចង់លុបសិស្សនេះចេញពីបញ្ជីមែនទេ?")) { button.closest("tr").remove(); updateIndex(); } }
+        function updateIndex() { let rows = document.querySelectorAll("#studentTable tr"); studentCount = 0; rows.forEach((row, index) => { studentCount = index + 1; row.querySelector(".stu-index").innerText = studentCount; }); }
+        function searchStudent() { let input = document.getElementById("searchInput").value.toLowerCase(); let rows = document.querySelectorAll("#studentTable tr"); rows.forEach(row => { let id = row.querySelector(".stu-id").innerText.toLowerCase(); let name = row.querySelector(".stu-name").innerText.toLowerCase(); if (id.includes(input) || name.includes(input)) row.style.display = ""; else row.style.display = "none"; }); }
+        function markStatus(button, status) { let row = button.closest("tr"); let pBtn = row.querySelector('.btn-present'); let aBtn = row.querySelector('.btn-absent'); pBtn.classList.remove('active-present'); aBtn.classList.remove('active-absent'); if (status === 'present') pBtn.classList.add('active-present'); else if (status === 'absent') aBtn.classList.add('active-absent'); }
+
+        function saveData() {
+            const rawDate = document.getElementById('date').value; const timeSlot = document.getElementById('timeSlot').value; 
+            if (!rawDate) { alert("សូមជ្រើសរើសកាលបរិច្ឆេទជាមុនសិន!"); return; }
+            if (!timeSlot) { alert("សូមជ្រើសរើសម៉ោងសិក្សាជាមុនសិន!"); return; }
+
+            const rows = document.querySelectorAll('#studentTable tr');
+            let attendanceList = []; let totalPresent = 0; let totalAbsent = 0; let absentNames = [];
+
+            // បំប្លែងកាលបរិច្ឆេទវត្តមានជា ថ្ងៃ/ខែ/ឆ្នាំ សម្រាប់បញ្ជូនទៅ Google Sheets
+            let formattedDisplayDate = formatDateToKhmer(rawDate); 
+
+            rows.forEach(row => {
+                let id = row.querySelector('.stu-id').innerText; let name = row.querySelector('.stu-name').innerText;
+                let gender = row.querySelector('.stu-gender').innerText; let dob = row.querySelector('.stu-dob').innerText; let grade = row.querySelector('.stu-grade').innerText;
+                let isPresent = row.querySelector('.active-present'); let isAbsent = row.querySelector('.active-absent'); let status = "";
+                
+                if (isPresent) { status = "វត្តមាន"; totalPresent++; } 
+                else if (isAbsent) { status = "អវត្តមាន"; totalAbsent++; absentNames.push(name); }
+                
+                if (status !== "") attendanceList.push({ 
+                    date: formattedDisplayDate, // បញ្ជូនជា ថ្ងៃ/ខែ/ឆ្នាំ
+                    time: timeSlot, id: id, name: name, gender: gender, dob: dob, grade: grade, status: status 
+                }); 
+            });
+
+            if (attendanceList.length === 0) { alert("សូមគូសវត្តមានសិស្សយ៉ាងហោចណាស់ម្នាក់!"); return; }
+
+            // រក្សាទុកក្នុង Local Storage (យើងប្រើ rawDate ដើម ដើម្បីងាយស្រួល Filter តាមខែ)
+            saveToLocalHistory(rawDate, timeSlot, totalPresent, totalAbsent, absentNames);
+
+            const scriptURL = 'ដាក់_LINK_WEB_APP_របស់អ្នក_នៅទីនេះ'; 
+            if (scriptURL === 'ដាក់_LINK_WEB_APP_របស់អ្នក_នៅទីនេះ') { alert("ទិន្នន័យត្រូវបានរក្សាទុកក្នុងប្រវត្តិខាងក្រោមដោយជោគជ័យ!"); resetFormButtons(rows); return; }
+
+            document.querySelector('.btn-save').innerText = "កំពុងរក្សាទុក...";
+            fetch(scriptURL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(attendanceList) })
+            .then(response => { alert("រក្សាទុកទៅ Google Sheets ជោគជ័យ!"); resetFormButtons(rows); })
+            .catch(error => { alert("រក្សាទុកទៅ Google Sheets បរាជ័យ ប៉ុន្តែមានក្នុងប្រវត្តិ!"); resetFormButtons(rows); });
+        }
+        function resetFormButtons(rows) { rows.forEach(row => { let pBtn = row.querySelector('.btn-present'); let aBtn = row.querySelector('.btn-absent'); if(pBtn) pBtn.classList.remove('active-present'); if(aBtn) aBtn.classList.remove('active-absent'); }); document.querySelector('.btn-save').innerText = "រក្សាទុកទិន្នន័យអវត្តមាន"; }
+
+        function saveToLocalHistory(date, timeSlot, present, absent, absentNames) {
+            let history = JSON.parse(localStorage.getItem('attendanceHistory')) || [];
+            history = history.filter(item => !(item.date === date && item.time === timeSlot));
+            history.push({ date: date, time: timeSlot, totalPresent: present, totalAbsent: absent, absentNames: absentNames });
+            history.sort((a, b) => new Date(b.date) - new Date(a.date));
+            localStorage.setItem('attendanceHistory', JSON.stringify(history));
+            resetHistoryFilter(); 
+        }
+
+        function loadHistory(filterMonth = "") {
+            let history = JSON.parse(localStorage.getItem('attendanceHistory')) || [];
+            let tableBody = document.getElementById("historyTable"); tableBody.innerHTML = "";
+            if (filterMonth !== "") history = history.filter(record => record.date.startsWith(filterMonth));
+            if (history.length === 0) { tableBody.innerHTML = `<tr><td colspan="5" style="color: #999;">គ្មានទិន្នន័យទេ</td></tr>`; return; }
+
+            history.forEach(record => {
+                let namesString = record.absentNames.length > 0 ? record.absentNames.join(', ') : 'គ្មាន';
+                // បំប្លែងកាលបរិច្ឆេទសម្រាប់បង្ហាញក្នុងតារាងប្រវត្តិ ទៅជា ថ្ងៃ/ខែ/ឆ្នាំ
+                let displayDate = formatDateToKhmer(record.date);
+                
+                let row = `<tr><td>${displayDate}</td><td style="color: #17a2b8;">${record.time}</td><td style="color: #28a745; font-weight: bold;">${record.totalPresent}</td><td style="color: #dc3545; font-weight: bold;">${record.totalAbsent}</td><td><button class="btn btn-view" onclick="viewDetails('${record.date}', '${record.time}', '${namesString}')">មើលលម្អិត</button></td></tr>`;
+                tableBody.innerHTML += row;
+            });
+        }
+        function filterHistoryByMonth() { loadHistory(document.getElementById("filterMonth").value); }
+        function resetHistoryFilter() { document.getElementById("filterMonth").value = ""; loadHistory(""); }
+        
+        function viewDetails(date, time, namesString) { 
+            let displayDate = formatDateToKhmer(date); // បង្ហាញជា ថ្ងៃ/ខែ/ឆ្នាំ ក្នុង Alert
+            alert(`កាលបរិច្ឆេទ: ${displayDate}\nម៉ោង: ${time}\n\nសិស្សអវត្តមាន:\n👉 ${namesString}`); 
+        }
+        
+        function clearHistory() { if(confirm("តើចង់លុបប្រវត្តិទាំងអស់មែនទេ?")) { localStorage.removeItem('attendanceHistory'); loadHistory(); } }
+
+        function generateMonthlyReport() {
+            let monthStr = document.getElementById('reportMonthInput').value; 
+            if (!monthStr) { alert("សូមជ្រើសរើសខែ ដើម្បីបង្កើតរបាយការណ៍!"); return; }
+
+            let history = JSON.parse(localStorage.getItem('attendanceHistory')) || [];
+            let monthHistory = history.filter(h => h.date.startsWith(monthStr));
+
+            if (monthHistory.length === 0) {
+                alert("មិនមានទិន្នន័យអវត្តមានដែលបានរក្សាទុក នៅក្នុងខែនេះទេ!");
+                document.getElementById('monthlyReportContainer').style.display = 'none';
+                document.getElementById('btnPrintReport').style.display = 'none';
+                return;
+            }
+
+            let totalSessionsInMonth = monthHistory.length; 
+
+            let studentRows = document.querySelectorAll('#studentTable tr');
+            let studentsData = [];
+            
+            studentRows.forEach(row => {
+                let id = row.querySelector('.stu-id').innerText;
+                let name = row.querySelector('.stu-name').innerText;
+                let gender = row.querySelector('.stu-gender').innerText;
+                let grade = row.querySelector('.stu-grade').innerText;
+                studentsData.push({ id: id, name: name, gender: gender, grade: grade, presentCount: 0, absentCount: 0 });
+            });
+
+            studentsData.forEach(student => {
+                monthHistory.forEach(session => {
+                    if (session.absentNames.includes(student.name)) {
+                        student.absentCount++;
+                    } else {
+                        student.presentCount++;
+                    }
+                });
+            });
+
+            let tbody = document.getElementById('monthlyReportBody');
+            tbody.innerHTML = "";
+            
+            studentsData.forEach((student, index) => {
+                let row = `<tr>
+                    <td>${index + 1}</td>
+                    <td>${student.id}</td>
+                    <td style="text-align: left; font-weight: bold;">${student.name}</td>
+                    <td>${student.gender}</td>
+                    <td>${student.grade}</td>
+                    <td style="color: #28a745; font-weight: bold; font-size: 16px;">${student.presentCount}</td>
+                    <td style="color: #dc3545; font-weight: bold; font-size: 16px;">${student.absentCount}</td>
+                    <td style="color: #007bff; font-weight: bold;">${totalSessionsInMonth}</td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+
+            // បំប្លែង "2026-03" ទៅជា "03/2026" សម្រាប់បង្ហាញចំណងជើង
+            let parts = monthStr.split('-');
+            let displayMonth = `${parts[1]}/${parts[0]}`;
+
+            document.getElementById('reportTitleMonth').innerText = `ខែ/ឆ្នាំ: ${displayMonth}`;
+            document.getElementById('monthlyReportContainer').style.display = 'block';
+            document.getElementById('btnPrintReport').style.display = 'block'; 
+        }
+
+        function printDailyReport() {
+            document.body.classList.add('print-daily');
+            window.print();
+            setTimeout(() => { document.body.classList.remove('print-daily'); }, 1000);
+        }
+
+        function printMonthlyReport() {
+            document.body.classList.add('print-monthly');
+            window.print();
+            setTimeout(() => { document.body.classList.remove('print-monthly'); }, 1000);
+        }
+    </script>
+
+</body>
+</html>
