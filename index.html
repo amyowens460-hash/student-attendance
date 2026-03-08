@@ -2,89 +2,216 @@
 <html lang="km">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#121212">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>ប្រព័ន្ធគ្រប់គ្រងអវត្តមានសិស្ស</title>
+    
     <style>
-        body { font-family: 'Khmer OS Battambang', sans-serif; background-color: #121212; color: #ffffff; margin: 20px; }
-        h2, h3 { text-align: center; color: #ffffff; margin-bottom: 25px; }
+        /* =========================================
+           [ការកំណត់ទូទៅ (Global Styles)]
+           ========================================= */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Khmer OS Battambang', sans-serif; 
+            background-color: #121212; 
+            color: #e0e0e0; 
+            padding: 15px; 
+            max-width: 1400px; /* កំណត់ទំហំអតិបរមាលើ PC */
+            margin: 0 auto; 
+            -webkit-font-smoothing: antialiased;
+        }
+        h2, h3 { text-align: center; color: #ffffff; margin: 20px 0 25px 0; font-weight: 600; }
         
         /* =========================================
-           [រចនាប័ទ្ម Tab (ផ្ទាំង)]
+           [រចនាប័ទ្ម Tab (ផ្ទាំងបញ្ជាខាងលើ)]
            ========================================= */
-        .tab-container { background-color: #1e1e1e; border-radius: 8px 8px 0 0; display: flex; overflow: hidden; border-bottom: 2px solid #333; }
-        .tab-btn { background-color: inherit; color: #aaa; border: none; outline: none; cursor: pointer; padding: 15px 20px; transition: 0.3s; font-size: 16px; font-family: 'Khmer OS Battambang', sans-serif; flex-grow: 1; font-weight: bold; }
-        .tab-btn:hover { background-color: #333; color: #fff; }
-        .tab-btn.active { background-color: #007bff; color: white; border-bottom: 3px solid #00d2ff; }
+        .tab-container { 
+            background-color: #1e1e24; 
+            border-radius: 10px 10px 0 0; 
+            display: flex; 
+            border-bottom: 2px solid #2d2d35;
+            overflow-x: auto; /* អាចអូសបានលើទូរស័ព្ទបើ Tab វែងពេក */
+            -webkit-overflow-scrolling: touch;
+        }
+        .tab-btn { 
+            background-color: transparent; 
+            color: #a0a0a0; 
+            border: none; 
+            outline: none; 
+            cursor: pointer; 
+            padding: 15px 20px; 
+            transition: all 0.3s ease; 
+            font-size: 15px; 
+            font-family: 'Khmer OS Battambang', sans-serif; 
+            flex: 1; 
+            font-weight: bold; 
+            white-space: nowrap;
+        }
+        .tab-btn:hover { color: #ffffff; background-color: rgba(255,255,255,0.05); }
+        .tab-btn.active { color: #00d2ff; border-bottom: 3px solid #00d2ff; background-color: rgba(0, 210, 255, 0.05); }
         
-        .tab-content { display: none; padding: 20px; background-color: #121212; border: 1px solid #333; border-top: none; border-radius: 0 0 8px 8px; animation: fadeEffect 0.5s; }
-        @keyframes fadeEffect { from {opacity: 0;} to {opacity: 1;} }
+        .tab-content { 
+            display: none; 
+            padding: 25px 20px; 
+            background-color: #16161a; 
+            border-radius: 0 0 10px 10px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            animation: fadeIn 0.4s ease-in-out; 
+        }
+        @keyframes fadeIn { from {opacity: 0; transform: translateY(5px);} to {opacity: 1; transform: translateY(0);} }
 
         /* =========================================
-           [រចនាប័ទ្ម ទម្រង់បញ្ចូល និងតារាង]
+           [ប្រអប់បញ្ចូលទិន្នន័យ (Forms & Controls)]
            ========================================= */
-        .controls-container, .add-student-container, .report-controls {
-            display: flex; justify-content: flex-start; align-items: center;
-            margin-bottom: 20px; flex-wrap: wrap; gap: 15px;
-            background-color: #1e1e1e; padding: 15px; border-radius: 8px; border: 1px solid #444444;
+        .controls-container, .add-student-container, .report-controls, .filter-history {
+            display: flex; 
+            justify-content: flex-start; 
+            align-items: flex-end; /* តម្រៀបធាតុឲ្យស្មើបាត */
+            margin-bottom: 20px; 
+            flex-wrap: wrap; 
+            gap: 15px;
+            background-color: #1e1e24; 
+            padding: 20px; 
+            border-radius: 10px; 
+            border: 1px solid #2d2d35;
         }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1; /* ពង្រីកពេញចន្លោះទំនេរ */
+            min-width: 150px; /* ការពារមិនឲ្យរួមតូចពេក */
+        }
+        
+        .input-group label { font-size: 13px; color: #b0b0b0; font-weight: bold; }
 
         input[type="date"], input[type="text"], input[type="month"], select {
-            background-color: #333333; color: #ffffff; border: 1px solid #666666;
-            padding: 8px 12px; border-radius: 4px; font-family: inherit; width: 100%; max-width: 180px;
+            background-color: #2a2a32; 
+            color: #ffffff; 
+            border: 1px solid #40404a;
+            padding: 10px 12px; 
+            border-radius: 6px; 
+            font-family: inherit; 
+            width: 100%; 
+            font-size: 14px;
+            transition: border 0.3s ease;
         }
-        input:focus, select:focus { outline: none; border-color: #007bff; }
-        .search-box { margin-left: auto; }
-
-        table { width: 100%; border-collapse: collapse; background-color: #1e1e1e; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(255,255,255,0.05); }
-        th, td { padding: 12px; border: 1px solid #444444; text-align: center; font-size: 14px; }
-        th { background-color: #000000; color: #ffffff; white-space: nowrap; }
-
-        .btn { padding: 8px 15px; border: none; cursor: pointer; border-radius: 4px; font-family: 'Khmer OS Battambang', sans-serif; transition: 0.3s; font-weight: bold;}
-        
-        .btn-present, .btn-absent { background-color: #333333; color: #ffffff; border: 1px solid #555555; margin: 2px; }
-        .active-present { background-color: #ffffff !important; color: #000000 !important; }
-        .active-absent { background-color: #555555 !important; color: #ffffff !important; border: 1px solid #ffffff; }
-
-        .btn-edit { background-color: #ffc107; color: #000; padding: 6px 10px; font-size: 13px; }
-        .btn-delete { background-color: #dc3545; color: #fff; padding: 6px 10px; font-size: 13px; }
-        .action-btns { display: flex; gap: 5px; justify-content: center; }
-
-        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
-        .btn-save { background-color: #ffffff; color: #000000; padding: 12px 20px; font-size: 16px; width: 100%; border-radius: 5px; }
-        .btn-print { background-color: #17a2b8; color: #ffffff; padding: 12px 20px; font-size: 16px; width: 100%; border-radius: 5px; }
-        .btn-add { background-color: #4CAF50; color: white; width: auto; }
-        .btn-update { background-color: #ffc107; color: #000; width: auto; }
-        .btn-view { background-color: #007bff; color: white; padding: 6px 10px; font-size: 13px; }
-        .btn-reset { background-color: #6c757d; color: white; padding: 8px 15px; font-size: 14px; }
-        .btn-generate { background-color: #28a745; color: white; padding: 8px 15px; }
-        .btn-print-report { background-color: #17a2b8; color: white; padding: 8px 15px; display: none; }
-
-        .report-section { display: none; margin-top: 20px;} 
-        .report-header { text-align: center; display: none; margin-bottom: 20px; }
+        input:focus, select:focus { outline: none; border-color: #00d2ff; background-color: #2f2f38; }
 
         /* =========================================
-           [កំណត់ CSS សម្រាប់ការបោះពុម្ព Print]
+           [រចនាប័ទ្ម តារាង (Responsive Tables)]
+           ========================================= */
+        /* រុំតារាងដើម្បីឲ្យអាចអូសបានលើ Mobile (សំខាន់បំផុត) */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto; /* អនុញ្ញាតឲ្យអូសឆ្វេងស្តាំ */
+            -webkit-overflow-scrolling: touch;
+            border-radius: 8px;
+            border: 1px solid #2d2d35;
+            margin-bottom: 20px;
+        }
+        
+        table { width: 100%; border-collapse: collapse; background-color: #1e1e24; min-width: 800px; /* ការពារកុំឲ្យបែកលើទូរស័ព្ទ */ }
+        th, td { padding: 14px 12px; border-bottom: 1px solid #2d2d35; text-align: center; font-size: 14px; }
+        th { background-color: #16161a; color: #a0a0a0; white-space: nowrap; font-weight: bold; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+        tbody tr:hover { background-color: rgba(255,255,255,0.02); }
+
+        /* =========================================
+           [រចនាប័ទ្ម ប៊ូតុងទូទៅ]
+           ========================================= */
+        .btn { 
+            padding: 10px 18px; border: none; cursor: pointer; border-radius: 6px; 
+            font-family: 'Khmer OS Battambang', sans-serif; transition: all 0.2s; 
+            font-weight: bold; font-size: 14px; display: inline-flex; justify-content: center; align-items: center; gap: 5px;
+        }
+        .btn:active { transform: scale(0.97); } /* Effect ពេលចុច */
+        
+        /* ប៊ូតុង វត្តមាន / អវត្តមាន ក្នុងតារាង */
+        .status-btns { display: flex; gap: 5px; justify-content: center; }
+        .btn-present, .btn-absent { 
+            background-color: #2a2a32; color: #a0a0a0; border: 1px solid #40404a; 
+            padding: 8px 12px; font-size: 13px; border-radius: 5px; flex: 1;
+        }
+        .active-present { background-color: #17c964 !important; color: #000000 !important; border-color: #17c964 !important; }
+        .active-absent { background-color: #f31260 !important; color: #ffffff !important; border-color: #f31260 !important; }
+
+        /* ប៊ូតុង Action ក្នុងតារាង */
+        .action-btns { display: flex; gap: 5px; justify-content: center; }
+        .btn-edit { background-color: #f5a524; color: #000; padding: 6px 10px; font-size: 12px; }
+        .btn-delete { background-color: #f31260; color: #fff; padding: 6px 10px; font-size: 12px; }
+
+        /* ប៊ូតុងបញ្ជាធំៗ */
+        .btn-group { display: flex; gap: 15px; margin-top: 25px; flex-wrap: wrap; }
+        .btn-save { background-color: #ffffff; color: #000000; padding: 14px 20px; font-size: 16px; flex: 1; min-width: 250px; }
+        .btn-save:hover { background-color: #e0e0e0; }
+        .btn-print { background-color: #006fee; color: #ffffff; padding: 14px 20px; font-size: 16px; flex: 1; min-width: 250px; }
+        
+        .btn-add { background-color: #17c964; color: #000; height: 40px; }
+        .btn-update { background-color: #f5a524; color: #000; height: 40px; }
+        .btn-view { background-color: #006fee; color: white; padding: 6px 12px; font-size: 12px; }
+        .btn-reset { background-color: #3f3f46; color: white; height: 40px; }
+        .btn-generate { background-color: #17c964; color: #000; height: 40px; }
+        .btn-print-report { background-color: #006fee; color: white; height: 40px; display: none; }
+
+        .report-section { display: none; margin-top: 30px; } 
+        .report-header { text-align: center; display: none; margin-bottom: 20px; }
+
+        /* ឈ្មោះអ្នកបង្កើត (Footer) */
+        .footer-credit { text-align: center; margin-top: 40px; padding: 20px 0; color: #666; font-size: 14px; border-top: 1px solid #2d2d35; }
+        .footer-credit strong { color: #00d2ff; letter-spacing: 0.5px; }
+
+        /* =========================================
+           [Mobile Responsive (សម្រាប់ទូរស័ព្ទដៃ)]
+           ========================================= */
+        @media screen and (max-width: 768px) {
+            body { padding: 10px; }
+            .tab-btn { padding: 12px 15px; font-size: 14px; }
+            
+            .controls-container, .add-student-container, .report-controls, .filter-history {
+                flex-direction: column; /* តម្រៀបជាជួរឈរពេញទំហំទូរស័ព្ទ */
+                align-items: stretch; /* ពង្រីកឲ្យស្មើគែម */
+                padding: 15px;
+            }
+            .input-group { min-width: 100%; width: 100%; }
+            .btn-add, .btn-update, .btn-reset, .btn-generate, .btn-print-report { width: 100%; margin-top: 10px; }
+            
+            .btn-group { flex-direction: column; } /* ប៊ូតុង Save និង Print ធ្លាក់បន្ទាត់ជាន់គ្នា */
+            
+            /* បង្រួមទំហំតារាងបន្តិចលើ Mobile */
+            th, td { padding: 10px 8px; font-size: 13px; }
+            .status-btns { flex-direction: column; gap: 4px; } /* ប៊ូតុងវត្តមានធ្លាក់លើក្រោម */
+            .action-btns { flex-direction: column; gap: 4px; }
+        }
+
+        /* =========================================
+           [CSS សម្រាប់ការបោះពុម្ព Print]
            ========================================= */
         @media print {
-            body { background-color: #ffffff !important; color: #000000 !important; margin: 0; }
-            .tab-container, input, select, button, .add-student-container, .controls-container, .report-controls { display: none !important; }
-            .tab-content { border: none !important; padding: 0 !important; display: block !important;}
-            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-            th, td { border: 1px solid #000000 !important; padding: 8px; color: #000000 !important; font-size: 13px; }
+            body { background-color: #ffffff !important; color: #000000 !important; margin: 0; padding: 0; max-width: 100%; }
+            .tab-container, input, select, button, .add-student-container, .controls-container, .report-controls, .footer-credit { display: none !important; }
+            .tab-content { border: none !important; padding: 0 !important; display: block !important; background: transparent !important; box-shadow: none !important; }
+            
+            /* លុប Scrollbar ចេញពេល Print */
+            .table-wrapper { border: none !important; overflow: visible !important; margin-bottom: 20px; }
+            table { width: 100%; border-collapse: collapse; min-width: 100%; }
+            th, td { border: 1px solid #000000 !important; padding: 6px; color: #000000 !important; font-size: 12px; text-align: center; }
             th { background-color: #f2f2f2 !important; color: #000000 !important; }
 
-            /* ១. ពេល Print តារាងប្រចាំថ្ងៃ */
+            /* ១. Print តារាងប្រចាំថ្ងៃ */
             body.print-daily #TabHistory, body.print-daily #TabReport { display: none !important; }
             body.print-daily #TabAttendance { display: block !important; }
             body.print-daily th:nth-child(8), body.print-daily td:nth-child(8) { display: none !important; } 
             body.print-daily .btn-present:not(.active-present), body.print-daily .btn-absent:not(.active-absent) { display: none !important; }
             body.print-daily .active-present, body.print-daily .active-absent { display: block !important; border: none; background: transparent !important; color: #000 !important; padding: 0; font-weight: bold; }
 
-            /* ២. ពេល Print របាយការណ៍ប្រចាំខែ */
+            /* ២. Print របាយការណ៍ខែ */
             body.print-monthly #TabAttendance, body.print-monthly #TabHistory { display: none !important; }
             body.print-monthly #TabReport { display: block !important; }
             body.print-monthly .report-section { display: block !important; }
-            body.print-monthly .report-header { display: block !important; text-align: center; color: #000 !important; margin-bottom: 20px; }
+            body.print-monthly .report-header { display: block !important; color: #000 !important; margin-bottom: 20px; }
         }
     </style>
 </head>
@@ -101,22 +228,39 @@
     <div id="TabAttendance" class="tab-content" style="display: block;">
         
         <div class="add-student-container">
-            <div><label style="font-weight: bold; color: #4CAF50;">+ បញ្ចូលសិស្សថ្មី៖ </label></div>
-            <input type="text" id="newStuId" placeholder="អត្តលេខ (ឧ. S004)">
-            <input type="text" id="newStuName" placeholder="ឈ្មោះសិស្ស">
-            <select id="newStuGender"><option value="ប្រុស">ប្រុស</option><option value="ស្រី">ស្រី</option></select>
-            <div style="display: flex; flex-direction: column;">
-                <span style="font-size: 11px; color: #aaa;">ថ្ងៃខែឆ្នាំកំណើត</span>
+            <div class="input-group" style="flex: 0 0 100%; margin-bottom: 5px;">
+                <label style="color: #17c964; font-size: 15px;">+ បញ្ចូលសិស្សថ្មីចូលក្នុងបញ្ជី</label>
+            </div>
+            <div class="input-group">
+                <label>អត្តលេខ</label>
+                <input type="text" id="newStuId" placeholder="ឧ. S004">
+            </div>
+            <div class="input-group">
+                <label>ឈ្មោះសិស្ស</label>
+                <input type="text" id="newStuName" placeholder="ឈ្មោះសិស្ស">
+            </div>
+            <div class="input-group">
+                <label>ភេទ</label>
+                <select id="newStuGender"><option value="ប្រុស">ប្រុស</option><option value="ស្រី">ស្រី</option></select>
+            </div>
+            <div class="input-group">
+                <label>ថ្ងៃខែឆ្នាំកំណើត</label>
                 <input type="date" id="newStuDob">
             </div>
-            <input type="text" id="newStuGrade" placeholder="ថ្នាក់ទី (ឧ. ១០ ក)">
+            <div class="input-group">
+                <label>ថ្នាក់ទី</label>
+                <input type="text" id="newStuGrade" placeholder="ឧ. ១០ ក">
+            </div>
             <button id="btnAddUpdate" class="btn btn-add" onclick="addOrUpdateStudent()">បញ្ជូនទិន្នន័យ</button>
         </div>
 
         <div class="controls-container">
-            <div><label for="date">កាលបរិច្ឆេទ: </label><input type="date" id="date" name="date"></div>
-            <div>
-                <label for="timeSlot">ម៉ោងសិក្សា: </label>
+            <div class="input-group">
+                <label for="date">កាលបរិច្ឆេទ</label>
+                <input type="date" id="date" name="date">
+            </div>
+            <div class="input-group">
+                <label for="timeSlot">ម៉ោងសិក្សា</label>
                 <select id="timeSlot">
                     <option value="">-- ជ្រើសរើសម៉ោង --</option>
                     <optgroup label="ពេលព្រឹក">
@@ -131,91 +275,124 @@
                     </optgroup>
                 </select>
             </div>
-            <div class="search-box"><input type="text" id="searchInput" onkeyup="searchStudent()" placeholder="ស្វែងរកឈ្មោះសិស្ស..."></div>
+            <div class="input-group search-box" style="flex: 2;">
+                <label>ស្វែងរកសិស្ស</label>
+                <input type="text" id="searchInput" onkeyup="searchStudent()" placeholder="វាយឈ្មោះ ឬអត្តលេខ...">
+            </div>
         </div>
 
-        <table id="mainTable">
-            <thead>
-                <tr>
-                    <th>ល.រ</th><th>អត្តលេខ</th><th>ឈ្មោះសិស្ស</th><th>ភេទ</th>
-                    <th>ថ្ងៃ/ខែ/ឆ្នាំ កំណើត</th><th>ថ្នាក់ទី</th><th>ស្ថានភាពវត្តមាន</th><th>សកម្មភាព</th>
-                </tr>
-            </thead>
-            <tbody id="studentTable">
-                <tr>
-                    <td class="stu-index">១</td><td class="stu-id">S001</td><td class="stu-name">សុខ សាន្ត</td><td class="stu-gender">ប្រុស</td>
-                    <td class="stu-dob">12/04/2005</td><td class="stu-grade">១០ ក</td>
-                    <td>
-                        <button class="btn btn-present" onclick="markStatus(this, 'present')">វត្តមាន</button>
-                        <button class="btn btn-absent" onclick="markStatus(this, 'absent')">អវត្តមាន</button>
-                    </td>
-                    <td class="action-btns">
-                        <button class="btn btn-edit" onclick="editStudent(this)">កែប្រែ</button>
-                        <button class="btn btn-delete" onclick="deleteStudent(this)">លុប</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="stu-index">២</td><td class="stu-id">S002</td><td class="stu-name">ចាន់ ធីតា</td><td class="stu-gender">ស្រី</td>
-                    <td class="stu-dob">25/08/2006</td><td class="stu-grade">១០ ក</td>
-                    <td>
-                        <button class="btn btn-present" onclick="markStatus(this, 'present')">វត្តមាន</button>
-                        <button class="btn btn-absent" onclick="markStatus(this, 'absent')">អវត្តមាន</button>
-                    </td>
-                    <td class="action-btns">
-                        <button class="btn btn-edit" onclick="editStudent(this)">កែប្រែ</button>
-                        <button class="btn btn-delete" onclick="deleteStudent(this)">លុប</button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="table-wrapper">
+            <table id="mainTable">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">ល.រ</th>
+                        <th style="width: 10%;">អត្តលេខ</th>
+                        <th style="width: 20%; text-align: left;">ឈ្មោះសិស្ស</th>
+                        <th style="width: 10%;">ភេទ</th>
+                        <th style="width: 15%;">ថ្ងៃ/ខែ/ឆ្នាំ កំណើត</th>
+                        <th style="width: 10%;">ថ្នាក់ទី</th>
+                        <th style="width: 20%;">ស្ថានភាពវត្តមាន</th>
+                        <th style="width: 10%;">សកម្មភាព</th>
+                    </tr>
+                </thead>
+                <tbody id="studentTable">
+                    <tr>
+                        <td class="stu-index">១</td><td class="stu-id">S001</td><td class="stu-name" style="text-align: left; font-weight: bold;">សុខ សាន្ត</td><td class="stu-gender">ប្រុស</td>
+                        <td class="stu-dob">12/04/2005</td><td class="stu-grade">១០ ក</td>
+                        <td>
+                            <div class="status-btns">
+                                <button class="btn btn-present" onclick="markStatus(this, 'present')">វត្តមាន</button>
+                                <button class="btn btn-absent" onclick="markStatus(this, 'absent')">អវត្តមាន</button>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn btn-edit" onclick="editStudent(this)">កែប្រែ</button>
+                                <button class="btn btn-delete" onclick="deleteStudent(this)">លុប</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="stu-index">២</td><td class="stu-id">S002</td><td class="stu-name" style="text-align: left; font-weight: bold;">ចាន់ ធីតា</td><td class="stu-gender">ស្រី</td>
+                        <td class="stu-dob">25/08/2006</td><td class="stu-grade">១០ ក</td>
+                        <td>
+                            <div class="status-btns">
+                                <button class="btn btn-present" onclick="markStatus(this, 'present')">វត្តមាន</button>
+                                <button class="btn btn-absent" onclick="markStatus(this, 'absent')">អវត្តមាន</button>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn btn-edit" onclick="editStudent(this)">កែប្រែ</button>
+                                <button class="btn btn-delete" onclick="deleteStudent(this)">លុប</button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
         <div class="btn-group">
-            <button class="btn btn-save" onclick="saveData()">រក្សាទុកទិន្នន័យអវត្តមាន</button>
+            <button class="btn btn-save" onclick="saveData()">💾 រក្សាទុកទិន្នន័យអវត្តមាន</button>
             <button class="btn btn-print" onclick="printDailyReport()">🖨️ បោះពុម្ពវត្តមានថ្ងៃនេះ</button>
         </div>
     </div>
 
     <div id="TabHistory" class="tab-content">
         <div class="filter-history">
-            <label for="filterMonth">ស្វែងរកតាមខែ៖ </label>
-            <input type="month" id="filterMonth" onchange="filterHistoryByMonth()">
+            <div class="input-group">
+                <label for="filterMonth">ស្វែងរកតាមខែ៖ </label>
+                <input type="month" id="filterMonth" onchange="filterHistoryByMonth()">
+            </div>
             <button class="btn btn-reset" onclick="resetHistoryFilter()">បង្ហាញទាំងអស់</button>
-            <button class="btn btn-delete" style="margin-left: auto;" onclick="clearHistory()">សម្អាតប្រវត្តិទាំងអស់</button>
+            <button class="btn btn-delete" style="margin-left: auto;" onclick="clearHistory()">🗑️ សម្អាតប្រវត្តិទាំងអស់</button>
         </div>
-        <table>
-            <thead>
-                <tr><th>កាលបរិច្ឆេទ (ថ្ងៃ/ខែ/ឆ្នាំ)</th><th>ម៉ោងសិក្សា</th><th>ចំនួនសិស្សវត្តមាន</th><th>ចំនួនសិស្សអវត្តមាន</th><th>សកម្មភាព</th></tr>
-            </thead>
-            <tbody id="historyTable"></tbody>
-        </table>
+        
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr><th>កាលបរិច្ឆេទ (ថ្ងៃ/ខែ/ឆ្នាំ)</th><th>ម៉ោងសិក្សា</th><th>ចំនួនសិស្សវត្តមាន</th><th>ចំនួនសិស្សអវត្តមាន</th><th>សកម្មភាព</th></tr>
+                </thead>
+                <tbody id="historyTable"></tbody>
+            </table>
+        </div>
     </div>
 
     <div id="TabReport" class="tab-content">
         <div class="report-controls">
-            <label>ជ្រើសរើសខែដើម្បីបូកសរុប៖ </label>
-            <input type="month" id="reportMonthInput">
-            <button class="btn btn-generate" onclick="generateMonthlyReport()">បង្កើតរបាយការណ៍</button>
+            <div class="input-group">
+                <label>ជ្រើសរើសខែដើម្បីបូកសរុប៖ </label>
+                <input type="month" id="reportMonthInput">
+            </div>
+            <button class="btn btn-generate" onclick="generateMonthlyReport()">⚙️ បង្កើតរបាយការណ៍</button>
             <button id="btnPrintReport" class="btn btn-print-report" onclick="printMonthlyReport()">🖨️ បោះពុម្ពរបាយការណ៍</button>
         </div>
 
         <div class="report-section" id="monthlyReportContainer">
             <div class="report-header">
                 <h2>របាយការណ៍វត្តមានសិស្សប្រចាំខែ</h2>
-                <h4 id="reportTitleMonth">ខែ/ឆ្នាំ: </h4>
+                <h4 id="reportTitleMonth" style="color: #666;">ខែ/ឆ្នាំ: </h4>
             </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>ល.រ</th><th>អត្តលេខ</th><th>ឈ្មោះសិស្ស</th><th>ភេទ</th><th>ថ្នាក់ទី</th>
-                        <th style="background-color: #155724; color: #d4edda;">វត្តមានសរុប</th>
-                        <th style="background-color: #721c24; color: #f8d7da;">អវត្តមានសរុប</th>
-                        <th>សរុបម៉ោងសិក្សា</th>
-                    </tr>
-                </thead>
-                <tbody id="monthlyReportBody">
-                </tbody>
-            </table>
+            
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ល.រ</th><th>អត្តលេខ</th><th style="text-align: left;">ឈ្មោះសិស្ស</th><th>ភេទ</th><th>ថ្នាក់ទី</th>
+                            <th style="background-color: rgba(23, 201, 100, 0.1); color: #17c964;">វត្តមានសរុប</th>
+                            <th style="background-color: rgba(243, 18, 96, 0.1); color: #f31260;">អវត្តមានសរុប</th>
+                            <th>សរុបម៉ោងសិក្សា</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monthlyReportBody">
+                    </tbody>
+                </table>
+            </div>
         </div>
+    </div>
+
+    <div class="footer-credit">
+        បង្កើតកម្មវិធីអោយ <strong>Rothivong</strong>
     </div>
 
     <script>
@@ -285,7 +462,7 @@
                 studentCount++;
                 let table = document.getElementById("studentTable");
                 let row = document.createElement("tr");
-                row.innerHTML = `<td class="stu-index">${studentCount}</td><td class="stu-id">${id}</td><td class="stu-name">${name}</td><td class="stu-gender">${gender}</td><td class="stu-dob">${dob}</td><td class="stu-grade">${grade}</td><td><button class="btn btn-present" onclick="markStatus(this, 'present')">វត្តមាន</button> <button class="btn btn-absent" onclick="markStatus(this, 'absent')">អវត្តមាន</button></td><td class="action-btns"><button class="btn btn-edit" onclick="editStudent(this)">កែប្រែ</button> <button class="btn btn-delete" onclick="deleteStudent(this)">លុប</button></td>`;
+                row.innerHTML = `<td class="stu-index">${studentCount}</td><td class="stu-id">${id}</td><td class="stu-name" style="text-align: left; font-weight: bold;">${name}</td><td class="stu-gender">${gender}</td><td class="stu-dob">${dob}</td><td class="stu-grade">${grade}</td><td><div class="status-btns"><button class="btn btn-present" onclick="markStatus(this, 'present')">វត្តមាន</button> <button class="btn btn-absent" onclick="markStatus(this, 'absent')">អវត្តមាន</button></div></td><td><div class="action-btns"><button class="btn btn-edit" onclick="editStudent(this)">កែប្រែ</button> <button class="btn btn-delete" onclick="deleteStudent(this)">លុប</button></div></td>`;
                 table.appendChild(row); updateIndex(); 
             }
             document.getElementById("newStuId").value = ""; document.getElementById("newStuName").value = ""; document.getElementById("newStuDob").value = ""; document.getElementById("newStuGrade").value = "";
@@ -338,7 +515,7 @@
             .then(response => { alert("រក្សាទុកទៅ Google Sheets ជោគជ័យ!"); resetFormButtons(rows); })
             .catch(error => { alert("រក្សាទុកទៅ Google Sheets បរាជ័យ ប៉ុន្តែមានក្នុងប្រវត្តិ!"); resetFormButtons(rows); });
         }
-        function resetFormButtons(rows) { rows.forEach(row => { let pBtn = row.querySelector('.btn-present'); let aBtn = row.querySelector('.btn-absent'); if(pBtn) pBtn.classList.remove('active-present'); if(aBtn) aBtn.classList.remove('active-absent'); }); document.querySelector('.btn-save').innerText = "រក្សាទុកទិន្នន័យអវត្តមាន"; }
+        function resetFormButtons(rows) { rows.forEach(row => { let pBtn = row.querySelector('.btn-present'); let aBtn = row.querySelector('.btn-absent'); if(pBtn) pBtn.classList.remove('active-present'); if(aBtn) aBtn.classList.remove('active-absent'); }); document.querySelector('.btn-save').innerText = "💾 រក្សាទុកទិន្នន័យអវត្តមាន"; }
 
         // ==========================================
         // កូដប្រវត្តិអវត្តមាន
@@ -356,18 +533,18 @@
             let history = JSON.parse(localStorage.getItem('attendanceHistory')) || [];
             let tableBody = document.getElementById("historyTable"); tableBody.innerHTML = "";
             if (filterMonth !== "") history = history.filter(record => record.date.startsWith(filterMonth));
-            if (history.length === 0) { tableBody.innerHTML = `<tr><td colspan="5" style="color: #999;">គ្មានទិន្នន័យទេ</td></tr>`; return; }
+            if (history.length === 0) { tableBody.innerHTML = `<tr><td colspan="5" style="color: #666; padding: 30px;">គ្មានទិន្នន័យទេ</td></tr>`; return; }
 
             history.forEach(record => {
                 let namesString = record.absentNames.length > 0 ? record.absentNames.join(', ') : 'គ្មាន';
                 let displayDate = formatDateToKhmer(record.date);
-                let row = `<tr><td>${displayDate}</td><td style="color: #17a2b8;">${record.time}</td><td style="color: #28a745; font-weight: bold;">${record.totalPresent}</td><td style="color: #dc3545; font-weight: bold;">${record.totalAbsent}</td><td><button class="btn btn-view" onclick="viewDetails('${record.date}', '${record.time}', '${namesString}')">មើលលម្អិត</button></td></tr>`;
+                let row = `<tr><td>${displayDate}</td><td style="color: #00d2ff;">${record.time}</td><td style="color: #17c964; font-weight: bold;">${record.totalPresent}</td><td style="color: #f31260; font-weight: bold;">${record.totalAbsent}</td><td><button class="btn btn-view" onclick="viewDetails('${record.date}', '${record.time}', '${namesString}')">មើលលម្អិត</button></td></tr>`;
                 tableBody.innerHTML += row;
             });
         }
         function filterHistoryByMonth() { loadHistory(document.getElementById("filterMonth").value); }
         function resetHistoryFilter() { document.getElementById("filterMonth").value = ""; loadHistory(""); }
-        function viewDetails(date, time, namesString) { let displayDate = formatDateToKhmer(date); alert(`កាលបរិច្ឆេទ: ${displayDate}\nម៉ោង: ${time}\n\nសិស្សអវត្តមាន:\n👉 ${namesString}`); }
+        function viewDetails(date, time, namesString) { let displayDate = formatDateToKhmer(date); alert(`📅 កាលបរិច្ឆេទ: ${displayDate}\n⏰ ម៉ោង: ${time}\n\nសិស្សអវត្តមាន:\n👉 ${namesString}`); }
         function clearHistory() { if(confirm("តើចង់លុបប្រវត្តិទាំងអស់មែនទេ?")) { localStorage.removeItem('attendanceHistory'); loadHistory(); } }
 
         // ==========================================
@@ -408,14 +585,14 @@
 
             let tbody = document.getElementById('monthlyReportBody'); tbody.innerHTML = "";
             studentsData.forEach((student, index) => {
-                let row = `<tr><td>${index + 1}</td><td>${student.id}</td><td style="text-align: left; font-weight: bold;">${student.name}</td><td>${student.gender}</td><td>${student.grade}</td><td style="color: #28a745; font-weight: bold; font-size: 16px;">${student.presentCount}</td><td style="color: #dc3545; font-weight: bold; font-size: 16px;">${student.absentCount}</td><td style="color: #007bff; font-weight: bold;">${totalSessionsInMonth}</td></tr>`;
+                let row = `<tr><td>${index + 1}</td><td>${student.id}</td><td style="text-align: left; font-weight: bold;">${student.name}</td><td>${student.gender}</td><td>${student.grade}</td><td style="color: #17c964; font-weight: bold; font-size: 16px;">${student.presentCount}</td><td style="color: #f31260; font-weight: bold; font-size: 16px;">${student.absentCount}</td><td style="color: #00d2ff; font-weight: bold;">${totalSessionsInMonth}</td></tr>`;
                 tbody.innerHTML += row;
             });
 
             let parts = monthStr.split('-'); let displayMonth = `${parts[1]}/${parts[0]}`;
             document.getElementById('reportTitleMonth').innerText = `ខែ/ឆ្នាំ: ${displayMonth}`;
             document.getElementById('monthlyReportContainer').style.display = 'block';
-            document.getElementById('btnPrintReport').style.display = 'block'; 
+            document.getElementById('btnPrintReport').style.display = 'inline-flex'; 
         }
 
         // ==========================================
