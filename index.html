@@ -11,6 +11,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -68,11 +70,14 @@
 
         .btn-group { display: flex; gap: 15px; margin-top: 25px; flex-wrap: wrap; }
         .btn-save { background-color: #ffffff; color: #000000; padding: 14px 20px; font-size: 16px; flex: 1; min-width: 250px; }
-        .btn-print { background-color: #006fee; color: #ffffff; padding: 14px 20px; font-size: 16px; flex: 1; min-width: 250px; }
         .btn-add, .btn-generate { background-color: #17c964; color: #000; height: 40px; }
         .btn-update { background-color: #f5a524; color: #000; height: 40px; }
         .btn-view { background-color: #006fee; color: white; padding: 6px 12px; font-size: 12px; }
         .btn-reset { background-color: #3f3f46; color: white; height: 40px; }
+        
+        /* ប៊ូតុង Excel និង PDF ថ្មី */
+        .btn-export-excel { background-color: #107c41; color: white; height: 40px; display: none; }
+        .btn-export-excel:hover { background-color: #0c6133; }
         .btn-print-report { background-color: #006fee; color: white; height: 40px; display: none; }
 
         .report-section { display: none; margin-top: 30px; } 
@@ -86,7 +91,7 @@
             .tab-btn { padding: 12px 15px; font-size: 14px; }
             .controls-container, .add-student-container, .report-controls, .filter-history { flex-direction: column; align-items: stretch; padding: 15px; }
             .input-group { min-width: 100%; width: 100%; }
-            .btn-add, .btn-update, .btn-reset, .btn-generate, .btn-print-report, .btn-delete { width: 100%; margin-top: 10px; }
+            .btn-add, .btn-update, .btn-reset, .btn-generate, .btn-print-report, .btn-export-excel, .btn-delete { width: 100%; margin-top: 10px; }
             .btn-group { flex-direction: column; } 
             th, td { padding: 10px 8px; font-size: 13px; }
             .status-btns, .action-btns { flex-direction: column; gap: 4px; }
@@ -142,7 +147,7 @@
 
         <div class="tab-container">
             <button class="tab-btn active" onclick="openTab(event, 'TabAttendance')">📝 កត់វត្តមាន និងសិស្ស</button>
-            <button class="tab-btn" onclick="openTab(event, 'TabHistory')">🕒 ប្រវត្តិអវត្តមាន (Cloud)</button>
+            <button class="tab-btn" onclick="openTab(event, 'TabHistory')">🕒 ប្រវត្តិអវត្តមាន</button>
             <button class="tab-btn" onclick="openTab(event, 'TabReport')">📊 របាយការណ៍</button>
         </div>
 
@@ -181,7 +186,7 @@
             </div>
             <div class="btn-group">
                 <button class="btn btn-save" onclick="saveData()">💾 រក្សាទុកទិន្នន័យអវត្តមាន</button>
-                <button class="btn btn-print" onclick="printDailyReport()">🖨️ បោះពុម្ពវត្តមានថ្ងៃនេះ</button>
+                <button class="btn btn-print btn-print-report" style="display:inline-flex;" onclick="printDailyReport()">🖨️ បោះពុម្ព / ទាញយកជា PDF</button>
             </div>
         </div>
 
@@ -257,12 +262,15 @@
                     </select>
                 </div>
                 <button class="btn btn-generate" onclick="generateMonthlyReport()">⚙️ បង្កើតរបាយការណ៍</button>
-                <button id="btnPrintReport" class="btn btn-print-report" onclick="printMonthlyReport()">🖨️ បោះពុម្ពរបាយការណ៍</button>
+                
+                <button class="btn btn-export-excel" id="btnExportExcel" onclick="exportToExcel()">📥 ទាញយកជា Excel</button>
+                <button id="btnPrintReport" class="btn btn-print-report" onclick="printMonthlyReport()">🖨️ បោះពុម្ព / ទាញយកជា PDF</button>
             </div>
+            
             <div class="report-section" id="monthlyReportContainer">
                 <div class="report-header"><h2>របាយការណ៍វត្តមានសិស្ស</h2><h4 id="reportTitleMonth" style="color: #666;"></h4></div>
                 <div class="table-wrapper">
-                    <table>
+                    <table id="reportTableForExcel">
                         <thead><tr><th>ល.រ</th><th>អត្តលេខ</th><th style="text-align: left;">ឈ្មោះសិស្ស</th><th>ភេទ</th><th>ថ្នាក់ទី</th><th style="background-color: rgba(23, 201, 100, 0.1); color: #17c964;">វត្តមានសរុប</th><th style="background-color: rgba(243, 18, 96, 0.1); color: #f31260;">អវត្តមានសរុប</th><th>សរុបម៉ោងសិក្សា</th></tr></thead>
                         <tbody id="monthlyReportBody"></tbody>
                     </table>
@@ -278,15 +286,14 @@
         // ១. ដាក់ FIREBASE CONFIG របស់អ្នកនៅទីនេះ
         // ==========================================
         const firebaseConfig = {
-            apiKey: "AIzaSyDCEnIctP45mdSHZNeJyPq9HJKlgLlqP3U",
-			  authDomain: "student-attendance-2febb.firebaseapp.com",
-			  projectId: "student-attendance-2febb",
-			  storageBucket: "student-attendance-2febb.firebasestorage.app",
-			  messagingSenderId: "752231680647",
-			  appId: "1:752231680647:web:0b7cc8ef91208dba940622"
-			};
+          apiKey: "AIzaSyDCEnIctP45mdSHZNeJyPq9HJKlgLlqP3U",
+		  authDomain: "student-attendance-2febb.firebaseapp.com",
+		  projectId: "student-attendance-2febb",
+		  storageBucket: "student-attendance-2febb.firebasestorage.app",
+		  messagingSenderId: "752231680647",
+		  appId: "1:752231680647:web:0b7cc8ef91208dba940622"
+		};	
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
@@ -427,12 +434,11 @@
             db.collection("attendanceHistory").orderBy("date", "desc").get().then((querySnapshot) => {
                 cloudHistoryData = []; 
                 querySnapshot.forEach((doc) => { 
-                    // រក្សាទុក ID របស់ document ដើម្បីស្រួលលុបនៅពេលក្រោយ
                     let data = doc.data();
                     data.docId = doc.id; 
                     cloudHistoryData.push(data); 
                 });
-                filterHistoryAdvanced(); // បង្ហាញតាមតម្រងបច្ចុប្បន្ន
+                filterHistoryAdvanced(); 
             }).catch((error) => { console.log("Error: ", error); });
         }
 
@@ -459,49 +465,29 @@
             renderHistoryTable(filteredData);
         }
 
-        function resetHistoryFilter() { 
-            document.getElementById("histFilterYear").value = ""; 
-            document.getElementById("histFilterMonth").value = ""; 
-            renderHistoryTable(cloudHistoryData); 
-        }
-
+        function resetHistoryFilter() { document.getElementById("histFilterYear").value = ""; document.getElementById("histFilterMonth").value = ""; renderHistoryTable(cloudHistoryData); }
         function viewDetails(date, time, namesString) { let displayDate = formatDateToKhmer(date); alert(`📅 កាលបរិច្ឆេទ: ${displayDate}\n⏰ ម៉ោង: ${time}\n\nសិស្សអវត្តមាន:\n👉 ${namesString}`); }
 
-        // ==========================================
-        // មុខងារថ្មី៖ លុបទិន្នន័យចេញពី Cloud តាមការជ្រើសរើស
-        // ==========================================
         function deleteHistoryFromCloud() {
             let year = document.getElementById("histFilterYear").value;
             let month = document.getElementById("histFilterMonth").value;
             
             let confirmMsg = "តើអ្នកពិតជាចង់លុបទិន្នន័យប្រវត្តិទាំងអស់មែនទេ? (ទិន្នន័យលុបចេញពី Cloud មិនអាចទាញមកវិញបានទេ)";
-            if (year !== "" && month !== "") {
-                confirmMsg = `តើអ្នកពិតជាចង់លុបទិន្នន័យសម្រាប់ ខែ${khmerMonths[month]} ឆ្នាំ${year} ចេញពី Cloud មែនទេ?`;
-            } else if (year !== "") {
-                confirmMsg = `តើអ្នកពិតជាចង់លុបទិន្នន័យសម្រាប់ ឆ្នាំ${year} ទាំងអស់ចេញពី Cloud មែនទេ?`;
-            } else if (month !== "") {
-                confirmMsg = `តើអ្នកពិតជាចង់លុបទិន្នន័យសម្រាប់ ខែ${khmerMonths[month]} (គ្រប់ឆ្នាំ) ចេញពី Cloud មែនទេ?`;
-            }
+            if (year !== "" && month !== "") { confirmMsg = `តើអ្នកពិតជាចង់លុបទិន្នន័យសម្រាប់ ខែ${khmerMonths[month]} ឆ្នាំ${year} ចេញពី Cloud មែនទេ?`; } 
+            else if (year !== "") { confirmMsg = `តើអ្នកពិតជាចង់លុបទិន្នន័យសម្រាប់ ឆ្នាំ${year} ទាំងអស់ចេញពី Cloud មែនទេ?`; } 
+            else if (month !== "") { confirmMsg = `តើអ្នកពិតជាចង់លុបទិន្នន័យសម្រាប់ ខែ${khmerMonths[month]} (គ្រប់ឆ្នាំ) ចេញពី Cloud មែនទេ?`; }
 
             if(confirm(confirmMsg)) {
                 let btn = document.getElementById("btnDeleteHistory");
                 let originalText = btn.innerText;
-                btn.innerText = "កំពុងលុប...";
-                btn.disabled = true;
+                btn.innerText = "កំពុងលុប..."; btn.disabled = true;
 
-                // ត្រងរកឯកសារដែលត្រូវលុប
                 let docsToDelete = cloudHistoryData;
                 if (year !== "") docsToDelete = docsToDelete.filter(record => record.date.startsWith(year));
                 if (month !== "") docsToDelete = docsToDelete.filter(record => record.date.includes(month));
 
-                if (docsToDelete.length === 0) {
-                    alert("មិនមានទិន្នន័យសម្រាប់លុបតាមការជ្រើសរើសរបស់អ្នកទេ!");
-                    btn.innerText = originalText;
-                    btn.disabled = false;
-                    return;
-                }
+                if (docsToDelete.length === 0) { alert("មិនមានទិន្នន័យសម្រាប់លុបតាមការជ្រើសរើសរបស់អ្នកទេ!"); btn.innerText = originalText; btn.disabled = false; return; }
 
-                // ប្រើប្រាស់ Promise.all ដើម្បីលុបឯកសារទាំងអស់ក្នុងពេលតែមួយ
                 let deletePromises = [];
                 docsToDelete.forEach(record => {
                     if(record.docId) {
@@ -512,28 +498,23 @@
 
                 Promise.all(deletePromises).then(() => {
                     alert(`បានលុបទិន្នន័យចំនួន ${deletePromises.length} កំណត់ត្រាដោយជោគជ័យ!`);
-                    loadHistoryFromCloud(); // ទាញទិន្នន័យថ្មីមកបង្ហាញវិញ
-                    btn.innerText = originalText;
-                    btn.disabled = false;
+                    loadHistoryFromCloud(); 
+                    btn.innerText = originalText; btn.disabled = false;
                 }).catch((error) => {
                     alert("មានបញ្ហាក្នុងការលុប: " + error.message);
-                    btn.innerText = originalText;
-                    btn.disabled = false;
+                    btn.innerText = originalText; btn.disabled = false;
                 });
             }
         }
 
         // ==========================================
-        // ៥. របាយការណ៍បូកសរុប 
+        // ៥. របាយការណ៍បូកសរុប និង ទាញយក EXCEL/PDF
         // ==========================================
         function generateMonthlyReport() {
             let year = document.getElementById('repFilterYear').value; 
             let month = document.getElementById('repFilterMonth').value; 
 
-            if (year === "" && month === "") {
-                alert("សូមជ្រើសរើសឆ្នាំ ឬខែណាមួយ ដើម្បីបង្កើតរបាយការណ៍!");
-                return;
-            }
+            if (year === "" && month === "") { alert("សូមជ្រើសរើសឆ្នាំ ឬខែណាមួយ ដើម្បីបង្កើតរបាយការណ៍!"); return; }
 
             let filteredHistory = cloudHistoryData;
             if (year !== "") filteredHistory = filteredHistory.filter(h => h.date.startsWith(year));
@@ -543,6 +524,7 @@
                 alert("មិនមានទិន្នន័យអវត្តមានដែលបានរក្សាទុក ក្នុងកំលុងពេលនេះទេ!");
                 document.getElementById('monthlyReportContainer').style.display = 'none';
                 document.getElementById('btnPrintReport').style.display = 'none';
+                document.getElementById('btnExportExcel').style.display = 'none';
                 return;
             }
 
@@ -576,9 +558,34 @@
 
             document.getElementById('reportTitleMonth').innerText = titleText;
             document.getElementById('monthlyReportContainer').style.display = 'block';
+            
+            // បង្ហាញប៊ូតុងទាញយកទាំង ២
             document.getElementById('btnPrintReport').style.display = 'inline-flex'; 
+            document.getElementById('btnExportExcel').style.display = 'inline-flex'; 
         }
 
+        // មុខងារទាញយក Excel ថ្មី
+        function exportToExcel() {
+            let table = document.getElementById("reportTableForExcel");
+            let titleText = document.getElementById("reportTitleMonth").innerText;
+            
+            // បង្កើតឯកសារ Excel (Workbook) ថ្មី
+            let wb = XLSX.utils.book_new();
+            
+            // បំប្លែងតារាង HTML ទៅជាសន្លឹកកិច្ចការ (Worksheet)
+            let ws = XLSX.utils.table_to_sheet(table);
+            
+            // ដាក់សន្លឹកកិច្ចការចូលក្នុងឯកសារ Excel
+            XLSX.utils.book_append_sheet(wb, ws, "របាយការណ៍អវត្តមាន");
+            
+            // កំណត់ឈ្មោះឯកសារនៅពេលទាញយក
+            let fileName = "របាយការណ៍សិស្ស_" + titleText.replace(/[\/\s]/g, "_") + ".xlsx";
+            
+            // បញ្ជាឲ្យទាញយក
+            XLSX.writeFile(wb, fileName);
+        }
+
+        // មុខងារ Print / Save as PDF 
         function printDailyReport() { document.body.classList.add('print-daily'); window.print(); setTimeout(() => { document.body.classList.remove('print-daily'); }, 1000); }
         function printMonthlyReport() { document.body.classList.add('print-monthly'); window.print(); setTimeout(() => { document.body.classList.remove('print-monthly'); }, 1000); }
     </script>
