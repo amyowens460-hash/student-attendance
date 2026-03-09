@@ -75,7 +75,6 @@
         .btn-view { background-color: #006fee; color: white; padding: 6px 12px; font-size: 12px; }
         .btn-reset { background-color: #3f3f46; color: white; height: 40px; }
         
-        /* ប៊ូតុង Excel និង PDF ថ្មី */
         .btn-export-excel { background-color: #107c41; color: white; height: 40px; display: none; }
         .btn-export-excel:hover { background-color: #0c6133; }
         .btn-print-report { background-color: #006fee; color: white; height: 40px; display: none; }
@@ -168,7 +167,7 @@
                     <label for="timeSlot">ម៉ោងសិក្សា</label>
                     <select id="timeSlot">
                         <option value="">-- ជ្រើសរើសម៉ោង --</option>
-                        <optgroup label="ពេលព្រឹក"><option value="៧:០០ - ៨:០០ (ព្រឹក)">៧:០០ - ៨:០០</option><option value="៨:០០ - ៩:០០ (ព្រឹក)">៨:០០ - ៩:០០</option><option value="៩:០០ - ១០:០០ (ព្រឹក)">៩:០០ - ១០:០០</option><option value="១០:០០ - ១១:០០ (ព្រឹក)">១០:០០ - ១១:០០</option></optgroup>
+                        <optgroup label="ពេលព្រឹក"><option value="៧:០០ - ៨:០០ (ព្រឹក)">៧:០០ - ៨:០០</option><option value="៨:០០ - ៩:០០ (ព្រឹក)">៨:០០ - ៩:០០</option><option value="៩:០០ - ១0:០០ (ព្រឹក)">៩:០០ - ១០:០០</option><option value="១០:០០ - ១១:០០ (ព្រឹក)">១០:០០ - ១១:០០</option></optgroup>
                         <optgroup label="ពេលរសៀល"><option value="២:០០ - ៣:០០ (រសៀល)">២:០០ - ៣:០០</option><option value="៣:០០ - ៤:០០ (រសៀល)">៣:០០ - ៤:០០</option></optgroup>
                     </select>
                 </div>
@@ -199,25 +198,13 @@
                         <option value="2026">២០២៦</option>
                         <option value="2025">២០២៥</option>
                         <option value="2024">២០២៤</option>
-                        <option value="2023">២០២៣</option>
                     </select>
                 </div>
                 <div class="input-group">
                     <label>ជ្រើសរើសខែ៖</label>
                     <select id="histFilterMonth" onchange="filterHistoryAdvanced()">
                         <option value="">-- គ្រប់ខែ --</option>
-                        <option value="-01-">មករា (01)</option>
-                        <option value="-02-">កុម្ភៈ (02)</option>
-                        <option value="-03-">មីនា (03)</option>
-                        <option value="-04-">មេសា (04)</option>
-                        <option value="-05-">ឧសភា (05)</option>
-                        <option value="-06-">មិថុនា (06)</option>
-                        <option value="-07-">កក្កដា (07)</option>
-                        <option value="-08-">សីហា (08)</option>
-                        <option value="-09-">កញ្ញា (09)</option>
-                        <option value="-10-">តុលា (10)</option>
-                        <option value="-11-">វិច្ឆិកា (11)</option>
-                        <option value="-12-">ធ្នូ (12)</option>
+                        <option value="-01-">មករា (01)</option><option value="-02-">កុម្ភៈ (02)</option><option value="-03-">មីនា (03)</option><option value="-04-">មេសា (04)</option><option value="-05-">ឧសភា (05)</option><option value="-06-">មិថុនា (06)</option><option value="-07-">កក្កដា (07)</option><option value="-08-">សីហា (08)</option><option value="-09-">កញ្ញា (09)</option><option value="-10-">តុលា (10)</option><option value="-11-">វិច្ឆិកា (11)</option><option value="-12-">ធ្នូ (12)</option>
                     </select>
                 </div>
                 <button class="btn btn-reset" onclick="resetHistoryFilter()">បង្ហាញទាំងអស់</button>
@@ -237,28 +224,14 @@
                     <label>ជ្រើសរើសឆ្នាំ៖</label>
                     <select id="repFilterYear">
                         <option value="">-- ជ្រើសរើសឆ្នាំ --</option>
-                        <option value="2026">២០២៦</option>
-                        <option value="2025">២០២៥</option>
-                        <option value="2024">២០២៤</option>
-                        <option value="2023">២០២៣</option>
+                        <option value="2026">២០២៦</option><option value="2025">២០២៥</option><option value="2024">២០២៤</option>
                     </select>
                 </div>
                 <div class="input-group">
                     <label>ជ្រើសរើសខែ៖</label>
                     <select id="repFilterMonth">
                         <option value="">-- ពេញមួយឆ្នាំ --</option>
-                        <option value="-01-">មករា (01)</option>
-                        <option value="-02-">កុម្ភៈ (02)</option>
-                        <option value="-03-">មីនា (03)</option>
-                        <option value="-04-">មេសា (04)</option>
-                        <option value="-05-">ឧសភា (05)</option>
-                        <option value="-06-">មិថុនា (06)</option>
-                        <option value="-07-">កក្កដា (07)</option>
-                        <option value="-08-">សីហា (08)</option>
-                        <option value="-09-">កញ្ញា (09)</option>
-                        <option value="-10-">តុលា (10)</option>
-                        <option value="-11-">វិច្ឆិកា (11)</option>
-                        <option value="-12-">ធ្នូ (12)</option>
+                        <option value="-01-">មករា (01)</option><option value="-02-">កុម្ភៈ (02)</option><option value="-03-">មីនា (03)</option><option value="-04-">មេសា (04)</option><option value="-05-">ឧសភា (05)</option><option value="-06-">មិថុនា (06)</option><option value="-07-">កក្កដា (07)</option><option value="-08-">សីហា (08)</option><option value="-09-">កញ្ញា (09)</option><option value="-10-">តុលា (10)</option><option value="-11-">វិច្ឆិកា (11)</option><option value="-12-">ធ្នូ (12)</option>
                     </select>
                 </div>
                 <button class="btn btn-generate" onclick="generateMonthlyReport()">⚙️ បង្កើតរបាយការណ៍</button>
@@ -292,7 +265,7 @@
 		  storageBucket: "student-attendance-2febb.firebasestorage.app",
 		  messagingSenderId: "752231680647",
 		  appId: "1:752231680647:web:0b7cc8ef91208dba940622"
-		};	
+		};
 
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
@@ -389,7 +362,7 @@
         function markStatus(button, status) { let row = button.closest("tr"); let pBtn = row.querySelector('.btn-present'); let aBtn = row.querySelector('.btn-absent'); pBtn.classList.remove('active-present'); aBtn.classList.remove('active-absent'); if (status === 'present') pBtn.classList.add('active-present'); else if (status === 'absent') aBtn.classList.add('active-absent'); }
 
         // ==========================================
-        // ៤. មុខងារ Save / Load និង លុប ទិន្នន័យ (Cloud)
+        // ៤. មុខងារ Save / Load / Delete ជាមួយ Cloud
         // ==========================================
         function saveData() {
             const rawDate = document.getElementById('date').value; const timeSlot = document.getElementById('timeSlot').value; 
@@ -455,13 +428,10 @@
         }
 
         function filterHistoryAdvanced() {
-            let year = document.getElementById("histFilterYear").value;
-            let month = document.getElementById("histFilterMonth").value;
-            
+            let year = document.getElementById("histFilterYear").value; let month = document.getElementById("histFilterMonth").value;
             let filteredData = cloudHistoryData;
             if (year !== "") filteredData = filteredData.filter(record => record.date.startsWith(year));
             if (month !== "") filteredData = filteredData.filter(record => record.date.includes(month));
-            
             renderHistoryTable(filteredData);
         }
 
@@ -469,51 +439,34 @@
         function viewDetails(date, time, namesString) { let displayDate = formatDateToKhmer(date); alert(`📅 កាលបរិច្ឆេទ: ${displayDate}\n⏰ ម៉ោង: ${time}\n\nសិស្សអវត្តមាន:\n👉 ${namesString}`); }
 
         function deleteHistoryFromCloud() {
-            let year = document.getElementById("histFilterYear").value;
-            let month = document.getElementById("histFilterMonth").value;
-            
+            let year = document.getElementById("histFilterYear").value; let month = document.getElementById("histFilterMonth").value;
             let confirmMsg = "តើអ្នកពិតជាចង់លុបទិន្នន័យប្រវត្តិទាំងអស់មែនទេ? (ទិន្នន័យលុបចេញពី Cloud មិនអាចទាញមកវិញបានទេ)";
             if (year !== "" && month !== "") { confirmMsg = `តើអ្នកពិតជាចង់លុបទិន្នន័យសម្រាប់ ខែ${khmerMonths[month]} ឆ្នាំ${year} ចេញពី Cloud មែនទេ?`; } 
             else if (year !== "") { confirmMsg = `តើអ្នកពិតជាចង់លុបទិន្នន័យសម្រាប់ ឆ្នាំ${year} ទាំងអស់ចេញពី Cloud មែនទេ?`; } 
             else if (month !== "") { confirmMsg = `តើអ្នកពិតជាចង់លុបទិន្នន័យសម្រាប់ ខែ${khmerMonths[month]} (គ្រប់ឆ្នាំ) ចេញពី Cloud មែនទេ?`; }
 
             if(confirm(confirmMsg)) {
-                let btn = document.getElementById("btnDeleteHistory");
-                let originalText = btn.innerText;
-                btn.innerText = "កំពុងលុប..."; btn.disabled = true;
-
+                let btn = document.getElementById("btnDeleteHistory"); let originalText = btn.innerText; btn.innerText = "កំពុងលុប..."; btn.disabled = true;
                 let docsToDelete = cloudHistoryData;
                 if (year !== "") docsToDelete = docsToDelete.filter(record => record.date.startsWith(year));
                 if (month !== "") docsToDelete = docsToDelete.filter(record => record.date.includes(month));
-
                 if (docsToDelete.length === 0) { alert("មិនមានទិន្នន័យសម្រាប់លុបតាមការជ្រើសរើសរបស់អ្នកទេ!"); btn.innerText = originalText; btn.disabled = false; return; }
 
                 let deletePromises = [];
-                docsToDelete.forEach(record => {
-                    if(record.docId) {
-                        let promise = db.collection("attendanceHistory").doc(record.docId).delete();
-                        deletePromises.push(promise);
-                    }
-                });
+                docsToDelete.forEach(record => { if(record.docId) { let promise = db.collection("attendanceHistory").doc(record.docId).delete(); deletePromises.push(promise); } });
 
                 Promise.all(deletePromises).then(() => {
                     alert(`បានលុបទិន្នន័យចំនួន ${deletePromises.length} កំណត់ត្រាដោយជោគជ័យ!`);
-                    loadHistoryFromCloud(); 
-                    btn.innerText = originalText; btn.disabled = false;
-                }).catch((error) => {
-                    alert("មានបញ្ហាក្នុងការលុប: " + error.message);
-                    btn.innerText = originalText; btn.disabled = false;
-                });
+                    loadHistoryFromCloud(); btn.innerText = originalText; btn.disabled = false;
+                }).catch((error) => { alert("មានបញ្ហាក្នុងការលុប: " + error.message); btn.innerText = originalText; btn.disabled = false; });
             }
         }
 
         // ==========================================
-        // ៥. របាយការណ៍បូកសរុប និង ទាញយក EXCEL/PDF
+        // ៥. របាយការណ៍ និង ទាញយក EXCEL ថ្មី
         // ==========================================
         function generateMonthlyReport() {
-            let year = document.getElementById('repFilterYear').value; 
-            let month = document.getElementById('repFilterMonth').value; 
-
+            let year = document.getElementById('repFilterYear').value; let month = document.getElementById('repFilterMonth').value; 
             if (year === "" && month === "") { alert("សូមជ្រើសរើសឆ្នាំ ឬខែណាមួយ ដើម្បីបង្កើតរបាយការណ៍!"); return; }
 
             let filteredHistory = cloudHistoryData;
@@ -558,34 +511,36 @@
 
             document.getElementById('reportTitleMonth').innerText = titleText;
             document.getElementById('monthlyReportContainer').style.display = 'block';
-            
-            // បង្ហាញប៊ូតុងទាញយកទាំង ២
             document.getElementById('btnPrintReport').style.display = 'inline-flex'; 
             document.getElementById('btnExportExcel').style.display = 'inline-flex'; 
         }
 
-        // មុខងារទាញយក Excel ថ្មី
+        // មុខងារទាញយក Excel ដែលបានអាប់ដេតដើម្បីកំណត់ទំហំ Column
         function exportToExcel() {
             let table = document.getElementById("reportTableForExcel");
             let titleText = document.getElementById("reportTitleMonth").innerText;
             
-            // បង្កើតឯកសារ Excel (Workbook) ថ្មី
-            let wb = XLSX.utils.book_new();
-            
-            // បំប្លែងតារាង HTML ទៅជាសន្លឹកកិច្ចការ (Worksheet)
             let ws = XLSX.utils.table_to_sheet(table);
             
-            // ដាក់សន្លឹកកិច្ចការចូលក្នុងឯកសារ Excel
-            XLSX.utils.book_append_sheet(wb, ws, "របាយការណ៍អវត្តមាន");
+            // កំណត់ប្រវែង (Width) នៃកូឡោននីមួយៗឲ្យមើលទៅស្អាតមិនញាត់គ្នា
+            ws['!cols'] = [
+                { wch: 6 },   // ល.រ
+                { wch: 15 },  // អត្តលេខ
+                { wch: 30 },  // ឈ្មោះសិស្ស (កំណត់ឲ្យវែងជាងគេ)
+                { wch: 10 },  // ភេទ
+                { wch: 12 },  // ថ្នាក់ទី
+                { wch: 15 },  // វត្តមានសរុប
+                { wch: 15 },  // អវត្តមានសរុប
+                { wch: 18 }   // សរុបម៉ោងសិក្សា
+            ];
             
-            // កំណត់ឈ្មោះឯកសារនៅពេលទាញយក
-            let fileName = "របាយការណ៍សិស្ស_" + titleText.replace(/[\/\s]/g, "_") + ".xlsx";
+            let wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "របាយការណ៍សិស្ស");
             
-            // បញ្ជាឲ្យទាញយក
+            let fileName = "របាយការណ៍អវត្តមាន_" + titleText.replace(/[\/\s]/g, "_") + ".xlsx";
             XLSX.writeFile(wb, fileName);
         }
 
-        // មុខងារ Print / Save as PDF 
         function printDailyReport() { document.body.classList.add('print-daily'); window.print(); setTimeout(() => { document.body.classList.remove('print-daily'); }, 1000); }
         function printMonthlyReport() { document.body.classList.add('print-monthly'); window.print(); setTimeout(() => { document.body.classList.remove('print-monthly'); }, 1000); }
     </script>
