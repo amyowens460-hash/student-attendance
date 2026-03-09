@@ -3,14 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ប្រព័ន្ធគ្រប់គ្រងអវត្តមានសិស្ស (Cloud Sync)</title>
+    <meta name="theme-color" content="#121212">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>ប្រព័ន្ធគ្រប់គ្រងអវត្តមានសិស្ស</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 
     <style>
-        /* CSS រចនាប័ទ្មរក្សាទុកដូចដើមទាំងអស់ */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Khmer OS Battambang', sans-serif; background-color: #121212; color: #e0e0e0; -webkit-font-smoothing: antialiased; }
         h2, h3 { text-align: center; color: #ffffff; margin: 20px 0 25px 0; font-weight: 600; }
@@ -43,7 +45,7 @@
         .input-group { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 150px; }
         .input-group label { font-size: 13px; color: #b0b0b0; font-weight: bold; }
 
-        input[type="date"], input[type="text"], input[type="month"], select { background-color: #2a2a32; color: #ffffff; border: 1px solid #40404a; padding: 10px 12px; border-radius: 6px; font-family: inherit; width: 100%; font-size: 14px; }
+        input[type="date"], input[type="text"], select { background-color: #2a2a32; color: #ffffff; border: 1px solid #40404a; padding: 10px 12px; border-radius: 6px; font-family: inherit; width: 100%; font-size: 14px; }
         input:focus, select:focus { outline: none; border-color: #00d2ff; }
 
         .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; border: 1px solid #2d2d35; margin-bottom: 20px; }
@@ -53,6 +55,8 @@
 
         .btn { padding: 10px 18px; border: none; cursor: pointer; border-radius: 6px; font-family: inherit; transition: all 0.2s; font-weight: bold; font-size: 14px; }
         .btn:active { transform: scale(0.97); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
         .status-btns { display: flex; gap: 5px; justify-content: center; }
         .btn-present, .btn-absent { background-color: #2a2a32; color: #a0a0a0; border: 1px solid #40404a; padding: 8px 12px; font-size: 13px; border-radius: 5px; flex: 1; }
         .active-present { background-color: #17c964 !important; color: #000000 !important; border-color: #17c964 !important; }
@@ -82,7 +86,7 @@
             .tab-btn { padding: 12px 15px; font-size: 14px; }
             .controls-container, .add-student-container, .report-controls, .filter-history { flex-direction: column; align-items: stretch; padding: 15px; }
             .input-group { min-width: 100%; width: 100%; }
-            .btn-add, .btn-update, .btn-reset, .btn-generate, .btn-print-report { width: 100%; margin-top: 10px; }
+            .btn-add, .btn-update, .btn-reset, .btn-generate, .btn-print-report, .btn-delete { width: 100%; margin-top: 10px; }
             .btn-group { flex-direction: column; } 
             th, td { padding: 10px 8px; font-size: 13px; }
             .status-btns, .action-btns { flex-direction: column; gap: 4px; }
@@ -90,7 +94,7 @@
 
         @media print {
             body { background-color: #ffffff !important; color: #000000 !important; margin: 0; padding: 0; max-width: 100%; }
-            .tab-container, input, select, button, .add-student-container, .controls-container, .report-controls, .footer-credit, .header-bar .btn-logout { display: none !important; }
+            .tab-container, input, select, button, .add-student-container, .controls-container, .report-controls, .filter-history, .footer-credit, .header-bar .btn-logout { display: none !important; }
             .tab-content { border: none !important; padding: 0 !important; display: block !important; background: transparent !important; box-shadow: none !important; }
             .table-wrapper { border: none !important; overflow: visible !important; margin-bottom: 20px; }
             table { width: 100%; border-collapse: collapse; min-width: 100%; }
@@ -139,7 +143,7 @@
         <div class="tab-container">
             <button class="tab-btn active" onclick="openTab(event, 'TabAttendance')">📝 កត់វត្តមាន និងសិស្ស</button>
             <button class="tab-btn" onclick="openTab(event, 'TabHistory')">🕒 ប្រវត្តិអវត្តមាន (Cloud)</button>
-            <button class="tab-btn" onclick="openTab(event, 'TabReport')">📊 របាយការណ៍ខែ</button>
+            <button class="tab-btn" onclick="openTab(event, 'TabReport')">📊 របាយការណ៍</button>
         </div>
 
         <div id="TabAttendance" class="tab-content" style="display: block;">
@@ -183,8 +187,36 @@
 
         <div id="TabHistory" class="tab-content">
             <div class="filter-history">
-                <div class="input-group"><label for="filterMonth">ស្វែងរកតាមខែ៖ </label><input type="month" id="filterMonth" onchange="filterHistoryByMonth()"></div>
+                <div class="input-group">
+                    <label>ជ្រើសរើសឆ្នាំ៖</label>
+                    <select id="histFilterYear" onchange="filterHistoryAdvanced()">
+                        <option value="">-- គ្រប់ឆ្នាំ --</option>
+                        <option value="2026">២០២៦</option>
+                        <option value="2025">២០២៥</option>
+                        <option value="2024">២០២៤</option>
+                        <option value="2023">២០២៣</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>ជ្រើសរើសខែ៖</label>
+                    <select id="histFilterMonth" onchange="filterHistoryAdvanced()">
+                        <option value="">-- គ្រប់ខែ --</option>
+                        <option value="-01-">មករា (01)</option>
+                        <option value="-02-">កុម្ភៈ (02)</option>
+                        <option value="-03-">មីនា (03)</option>
+                        <option value="-04-">មេសា (04)</option>
+                        <option value="-05-">ឧសភា (05)</option>
+                        <option value="-06-">មិថុនា (06)</option>
+                        <option value="-07-">កក្កដា (07)</option>
+                        <option value="-08-">សីហា (08)</option>
+                        <option value="-09-">កញ្ញា (09)</option>
+                        <option value="-10-">តុលា (10)</option>
+                        <option value="-11-">វិច្ឆិកា (11)</option>
+                        <option value="-12-">ធ្នូ (12)</option>
+                    </select>
+                </div>
                 <button class="btn btn-reset" onclick="resetHistoryFilter()">បង្ហាញទាំងអស់</button>
+                <button class="btn btn-delete" id="btnDeleteHistory" style="margin-left: auto;" onclick="deleteHistoryFromCloud()">🗑️ លុបទិន្នន័យតាមការជ្រើសរើស</button>
             </div>
             <div class="table-wrapper">
                 <table>
@@ -196,12 +228,39 @@
 
         <div id="TabReport" class="tab-content">
             <div class="report-controls">
-                <div class="input-group"><label>ជ្រើសរើសខែដើម្បីបូកសរុប៖ </label><input type="month" id="reportMonthInput"></div>
+                <div class="input-group">
+                    <label>ជ្រើសរើសឆ្នាំ៖</label>
+                    <select id="repFilterYear">
+                        <option value="">-- ជ្រើសរើសឆ្នាំ --</option>
+                        <option value="2026">២០២៦</option>
+                        <option value="2025">២០២៥</option>
+                        <option value="2024">២០២៤</option>
+                        <option value="2023">២០២៣</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>ជ្រើសរើសខែ៖</label>
+                    <select id="repFilterMonth">
+                        <option value="">-- ពេញមួយឆ្នាំ --</option>
+                        <option value="-01-">មករា (01)</option>
+                        <option value="-02-">កុម្ភៈ (02)</option>
+                        <option value="-03-">មីនា (03)</option>
+                        <option value="-04-">មេសា (04)</option>
+                        <option value="-05-">ឧសភា (05)</option>
+                        <option value="-06-">មិថុនា (06)</option>
+                        <option value="-07-">កក្កដា (07)</option>
+                        <option value="-08-">សីហា (08)</option>
+                        <option value="-09-">កញ្ញា (09)</option>
+                        <option value="-10-">តុលា (10)</option>
+                        <option value="-11-">វិច្ឆិកា (11)</option>
+                        <option value="-12-">ធ្នូ (12)</option>
+                    </select>
+                </div>
                 <button class="btn btn-generate" onclick="generateMonthlyReport()">⚙️ បង្កើតរបាយការណ៍</button>
                 <button id="btnPrintReport" class="btn btn-print-report" onclick="printMonthlyReport()">🖨️ បោះពុម្ពរបាយការណ៍</button>
             </div>
             <div class="report-section" id="monthlyReportContainer">
-                <div class="report-header"><h2>របាយការណ៍វត្តមានសិស្សប្រចាំខែ</h2><h4 id="reportTitleMonth" style="color: #666;">ខែ/ឆ្នាំ: </h4></div>
+                <div class="report-header"><h2>របាយការណ៍វត្តមានសិស្ស</h2><h4 id="reportTitleMonth" style="color: #666;"></h4></div>
                 <div class="table-wrapper">
                     <table>
                         <thead><tr><th>ល.រ</th><th>អត្តលេខ</th><th style="text-align: left;">ឈ្មោះសិស្ស</th><th>ភេទ</th><th>ថ្នាក់ទី</th><th style="background-color: rgba(23, 201, 100, 0.1); color: #17c964;">វត្តមានសរុប</th><th style="background-color: rgba(243, 18, 96, 0.1); color: #f31260;">អវត្តមានសរុប</th><th>សរុបម៉ោងសិក្សា</th></tr></thead>
@@ -220,32 +279,31 @@
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyDCEnIctP45mdSHZNeJyPq9HJKlgLlqP3U",
-            authDomain: "student-attendance-2febb.firebaseapp.com",
-            projectId: "student-attendance-2febb",
-            storageBucket: "student-attendance-2febb.firebasestorage.app",
-            messagingSenderId: "752231680647",
-            appId: "1:752231680647:web:0b7cc8ef91208dba940622"
-        };
+			  authDomain: "student-attendance-2febb.firebaseapp.com",
+			  projectId: "student-attendance-2febb",
+			  storageBucket: "student-attendance-2febb.firebasestorage.app",
+			  messagingSenderId: "752231680647",
+			  appId: "1:752231680647:web:0b7cc8ef91208dba940622"
+			};
 
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // អថេរផ្ទុកទិន្នន័យប្រវត្តិពី Cloud
         let cloudHistoryData = [];
+        const khmerMonths = {"-01-":"មករា", "-02-":"កុម្ភៈ", "-03-":"មីនា", "-04-":"មេសា", "-05-":"ឧសភា", "-06-":"មិថុនា", "-07-":"កក្កដា", "-08-":"សីហា", "-09-":"កញ្ញា", "-10-":"តុលា", "-11-":"វិច្ឆិកា", "-12-":"ធ្នូ"};
 
         // ==========================================
-        // ២. មុខងារ Authentication (Firebase Login/Register)
+        // ២. មុខងារ Authentication
         // ==========================================
         let isLoginMode = true;
 
-        // ឆែកមើលក្រែងលោគាត់បាន Login រួចហើយ
         auth.onAuthStateChanged((user) => {
             if (user) {
                 document.getElementById("authOverlay").style.display = "none";
                 document.getElementById("mainApp").style.display = "block";
-                loadHistoryFromCloud(); // ទាញទិន្នន័យប្រវត្តិពី Database មកបង្ហាញ
+                loadHistoryFromCloud(); 
             } else {
                 document.getElementById("authOverlay").style.display = "flex";
                 document.getElementById("mainApp").style.display = "none";
@@ -262,46 +320,28 @@
             let user = document.getElementById("regUsername").value.trim();
             let pass = document.getElementById("regPassword").value.trim();
             if (user === "" || pass === "") { alert("សូមបញ្ចូលឈ្មោះគណនី និងពាក្យសម្ងាត់!"); return; }
-            
-            // Firebase ត្រូវការ Email ដូច្នេះយើងបំប្លែង Username ទៅជា Email ក្លែងក្លាយ
             let fakeEmail = user + "@schoolapp.com";
-
             auth.createUserWithEmailAndPassword(fakeEmail, pass)
-                .then((userCredential) => {
-                    alert("បង្កើតគណនីបានជោគជ័យ!");
-                    document.getElementById("regUsername").value = "";
-                    document.getElementById("regPassword").value = "";
-                })
-                .catch((error) => {
-                    alert("បញ្ហា: " + error.message);
-                });
+                .then(() => { alert("បង្កើតគណនីបានជោគជ័យ!"); document.getElementById("regUsername").value = ""; document.getElementById("regPassword").value = ""; })
+                .catch((error) => { alert("បញ្ហា: " + error.message); });
         }
 
         function loginUser() {
             let user = document.getElementById("loginUsername").value.trim();
             let pass = document.getElementById("loginPassword").value.trim();
             if (user === "" || pass === "") { alert("សូមបញ្ចូលឈ្មោះគណនី និងពាក្យសម្ងាត់!"); return; }
-            
             let fakeEmail = user + "@schoolapp.com";
-
             auth.signInWithEmailAndPassword(fakeEmail, pass)
-                .then((userCredential) => {
-                    document.getElementById("loginUsername").value = "";
-                    document.getElementById("loginPassword").value = "";
-                })
-                .catch((error) => {
-                    alert("ឈ្មោះគណនី ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវទេ!");
-                });
+                .then(() => { document.getElementById("loginUsername").value = ""; document.getElementById("loginPassword").value = ""; })
+                .catch(() => { alert("ឈ្មោះគណនី ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវទេ!"); });
         }
 
         function logoutUser() {
-            if(confirm("តើអ្នកពិតជាចង់ចាកចេញមែនទេ?")) {
-                auth.signOut();
-            }
+            if(confirm("តើអ្នកពិតជាចង់ចាកចេញមែនទេ?")) auth.signOut();
         }
 
         // ==========================================
-        // ៣. មុខងារបញ្ជា Tab និង UI ទូទៅ
+        // ៣. មុខងារបញ្ជា Tab & កត់វត្តមាន
         // ==========================================
         function openTab(evt, tabName) {
             let tabcontent = document.getElementsByClassName("tab-content");
@@ -335,14 +375,14 @@
             document.getElementById("newStuId").value = ""; document.getElementById("newStuName").value = ""; document.getElementById("newStuDob").value = ""; document.getElementById("newStuGrade").value = "";
         }
 
-        function editStudent(button) { let row = button.closest("tr"); document.getElementById("newStuId").value = row.querySelector(".stu-id").innerText; document.getElementById("newStuName").value = row.querySelector(".stu-name").innerText; document.getElementById("newStuGender").value = row.querySelector(".stu-gender").innerText; let dobValue = row.querySelector(".stu-dob").innerText; document.getElementById("newStuDob").value = parseDateFromKhmer(dobValue); let gradeValue = row.querySelector(".stu-grade").innerText; document.getElementById("newStuGrade").value = (gradeValue === "មិនបានបញ្ជាក់") ? "" : gradeValue; editingRow = row; let btn = document.getElementById("btnAddUpdate"); btn.innerText = "✓ រក្សាទុកការកែប្រែ"; btn.classList.replace("btn-add", "btn-update"); }
+        function editStudent(button) { let row = button.closest("tr"); document.getElementById("newStuId").value = row.querySelector(".stu-id").innerText; document.getElementById("newStuName").value = row.querySelector(".stu-name").innerText; document.getElementById("newStuGender").value = row.querySelector(".stu-gender").innerText; document.getElementById("newStuDob").value = parseDateFromKhmer(row.querySelector(".stu-dob").innerText); document.getElementById("newStuGrade").value = (row.querySelector(".stu-grade").innerText === "មិនបានបញ្ជាក់") ? "" : row.querySelector(".stu-grade").innerText; editingRow = row; let btn = document.getElementById("btnAddUpdate"); btn.innerText = "✓ រក្សាទុកការកែប្រែ"; btn.classList.replace("btn-add", "btn-update"); }
         function deleteStudent(button) { if(confirm("តើអ្នកពិតជាចង់លុបសិស្សនេះចេញពីបញ្ជីមែនទេ?")) { button.closest("tr").remove(); updateIndex(); } }
         function updateIndex() { let rows = document.querySelectorAll("#studentTable tr"); studentCount = 0; rows.forEach((row, index) => { studentCount = index + 1; row.querySelector(".stu-index").innerText = studentCount; }); }
         function searchStudent() { let input = document.getElementById("searchInput").value.toLowerCase(); let rows = document.querySelectorAll("#studentTable tr"); rows.forEach(row => { let id = row.querySelector(".stu-id").innerText.toLowerCase(); let name = row.querySelector(".stu-name").innerText.toLowerCase(); if (id.includes(input) || name.includes(input)) row.style.display = ""; else row.style.display = "none"; }); }
         function markStatus(button, status) { let row = button.closest("tr"); let pBtn = row.querySelector('.btn-present'); let aBtn = row.querySelector('.btn-absent'); pBtn.classList.remove('active-present'); aBtn.classList.remove('active-absent'); if (status === 'present') pBtn.classList.add('active-present'); else if (status === 'absent') aBtn.classList.add('active-absent'); }
 
         // ==========================================
-        // ៤. មុខងារ Save និង ទាញទិន្នន័យជាមួយ Firestore
+        // ៤. មុខងារ Save / Load និង លុប ទិន្នន័យ (Cloud)
         // ==========================================
         function saveData() {
             const rawDate = document.getElementById('date').value; const timeSlot = document.getElementById('timeSlot').value; 
@@ -354,8 +394,7 @@
             
             rows.forEach(row => {
                 let name = row.querySelector('.stu-name').innerText;
-                let isPresent = row.querySelector('.active-present'); 
-                let isAbsent = row.querySelector('.active-absent'); 
+                let isPresent = row.querySelector('.active-present'); let isAbsent = row.querySelector('.active-absent'); 
                 if (isPresent) { totalPresent++; } else if (isAbsent) { totalAbsent++; absentNames.push(name); }
             });
 
@@ -363,19 +402,18 @@
 
             document.querySelector('.btn-save').innerText = "កំពុងរក្សាទុកទៅ Cloud...";
 
-            // បញ្ជូនទិន្នន័យទៅ Cloud Firestore
             db.collection("attendanceHistory").add({
                 date: rawDate,
                 time: timeSlot,
                 totalPresent: totalPresent,
                 totalAbsent: totalAbsent,
                 absentNames: absentNames,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp() // កំណត់ត្រាពេល Save
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
             })
             .then(() => {
                 alert("ទិន្នន័យត្រូវបានរក្សាទុកក្នុង Cloud ដោយជោគជ័យ!");
                 resetFormButtons(rows);
-                loadHistoryFromCloud(); // ទាញទិន្នន័យមកបង្ហាញវិញភ្លាមៗ
+                loadHistoryFromCloud(); 
             })
             .catch((error) => {
                 alert("មានបញ្ហាក្នុងការរក្សាទុក: " + error.message);
@@ -385,23 +423,22 @@
 
         function resetFormButtons(rows) { rows.forEach(row => { let pBtn = row.querySelector('.btn-present'); let aBtn = row.querySelector('.btn-absent'); if(pBtn) pBtn.classList.remove('active-present'); if(aBtn) aBtn.classList.remove('active-absent'); }); document.querySelector('.btn-save').innerText = "💾 រក្សាទុកទិន្នន័យអវត្តមាន"; }
 
-        // មុខងារទាញទិន្នន័យពី Firebase Firestore
         function loadHistoryFromCloud() {
             db.collection("attendanceHistory").orderBy("date", "desc").get().then((querySnapshot) => {
-                cloudHistoryData = []; // សម្អាត Array ចាស់
-                querySnapshot.forEach((doc) => {
-                    cloudHistoryData.push(doc.data());
+                cloudHistoryData = []; 
+                querySnapshot.forEach((doc) => { 
+                    // រក្សាទុក ID របស់ document ដើម្បីស្រួលលុបនៅពេលក្រោយ
+                    let data = doc.data();
+                    data.docId = doc.id; 
+                    cloudHistoryData.push(data); 
                 });
-                renderHistoryTable(cloudHistoryData); // បង្ហាញលើតារាង
-            }).catch((error) => {
-                console.log("Error getting documents: ", error);
-            });
+                filterHistoryAdvanced(); // បង្ហាញតាមតម្រងបច្ចុប្បន្ន
+            }).catch((error) => { console.log("Error: ", error); });
         }
 
         function renderHistoryTable(dataArray) {
-            let tableBody = document.getElementById("historyTable"); 
-            tableBody.innerHTML = "";
-            if (dataArray.length === 0) { tableBody.innerHTML = `<tr><td colspan="5" style="color: #666; padding: 30px;">មិនទាន់មានទិន្នន័យអវត្តមានក្នុង Cloud ទេ</td></tr>`; return; }
+            let tableBody = document.getElementById("historyTable"); tableBody.innerHTML = "";
+            if (dataArray.length === 0) { tableBody.innerHTML = `<tr><td colspan="5" style="color: #666; padding: 30px;">មិនមានទិន្នន័យទេ</td></tr>`; return; }
 
             dataArray.forEach(record => {
                 let namesString = record.absentNames.length > 0 ? record.absentNames.join(', ') : 'គ្មាន';
@@ -411,36 +448,105 @@
             });
         }
 
-        function filterHistoryByMonth() { 
-            let filterMonth = document.getElementById("filterMonth").value; 
-            if (filterMonth === "") {
-                renderHistoryTable(cloudHistoryData);
-            } else {
-                let filteredData = cloudHistoryData.filter(record => record.date.startsWith(filterMonth));
-                renderHistoryTable(filteredData);
-            }
+        function filterHistoryAdvanced() {
+            let year = document.getElementById("histFilterYear").value;
+            let month = document.getElementById("histFilterMonth").value;
+            
+            let filteredData = cloudHistoryData;
+            if (year !== "") filteredData = filteredData.filter(record => record.date.startsWith(year));
+            if (month !== "") filteredData = filteredData.filter(record => record.date.includes(month));
+            
+            renderHistoryTable(filteredData);
         }
-        function resetHistoryFilter() { document.getElementById("filterMonth").value = ""; renderHistoryTable(cloudHistoryData); }
+
+        function resetHistoryFilter() { 
+            document.getElementById("histFilterYear").value = ""; 
+            document.getElementById("histFilterMonth").value = ""; 
+            renderHistoryTable(cloudHistoryData); 
+        }
+
         function viewDetails(date, time, namesString) { let displayDate = formatDateToKhmer(date); alert(`📅 កាលបរិច្ឆេទ: ${displayDate}\n⏰ ម៉ោង: ${time}\n\nសិស្សអវត្តមាន:\n👉 ${namesString}`); }
 
         // ==========================================
-        // ៥. កូដរបាយការណ៍ប្រចាំខែ (ប្រើទិន្នន័យពី Cloud)
+        // មុខងារថ្មី៖ លុបទិន្នន័យចេញពី Cloud តាមការជ្រើសរើស
+        // ==========================================
+        function deleteHistoryFromCloud() {
+            let year = document.getElementById("histFilterYear").value;
+            let month = document.getElementById("histFilterMonth").value;
+            
+            let confirmMsg = "តើអ្នកពិតជាចង់លុបទិន្នន័យប្រវត្តិទាំងអស់មែនទេ? (ទិន្នន័យលុបចេញពី Cloud មិនអាចទាញមកវិញបានទេ)";
+            if (year !== "" && month !== "") {
+                confirmMsg = `តើអ្នកពិតជាចង់លុបទិន្នន័យសម្រាប់ ខែ${khmerMonths[month]} ឆ្នាំ${year} ចេញពី Cloud មែនទេ?`;
+            } else if (year !== "") {
+                confirmMsg = `តើអ្នកពិតជាចង់លុបទិន្នន័យសម្រាប់ ឆ្នាំ${year} ទាំងអស់ចេញពី Cloud មែនទេ?`;
+            } else if (month !== "") {
+                confirmMsg = `តើអ្នកពិតជាចង់លុបទិន្នន័យសម្រាប់ ខែ${khmerMonths[month]} (គ្រប់ឆ្នាំ) ចេញពី Cloud មែនទេ?`;
+            }
+
+            if(confirm(confirmMsg)) {
+                let btn = document.getElementById("btnDeleteHistory");
+                let originalText = btn.innerText;
+                btn.innerText = "កំពុងលុប...";
+                btn.disabled = true;
+
+                // ត្រងរកឯកសារដែលត្រូវលុប
+                let docsToDelete = cloudHistoryData;
+                if (year !== "") docsToDelete = docsToDelete.filter(record => record.date.startsWith(year));
+                if (month !== "") docsToDelete = docsToDelete.filter(record => record.date.includes(month));
+
+                if (docsToDelete.length === 0) {
+                    alert("មិនមានទិន្នន័យសម្រាប់លុបតាមការជ្រើសរើសរបស់អ្នកទេ!");
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                    return;
+                }
+
+                // ប្រើប្រាស់ Promise.all ដើម្បីលុបឯកសារទាំងអស់ក្នុងពេលតែមួយ
+                let deletePromises = [];
+                docsToDelete.forEach(record => {
+                    if(record.docId) {
+                        let promise = db.collection("attendanceHistory").doc(record.docId).delete();
+                        deletePromises.push(promise);
+                    }
+                });
+
+                Promise.all(deletePromises).then(() => {
+                    alert(`បានលុបទិន្នន័យចំនួន ${deletePromises.length} កំណត់ត្រាដោយជោគជ័យ!`);
+                    loadHistoryFromCloud(); // ទាញទិន្នន័យថ្មីមកបង្ហាញវិញ
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }).catch((error) => {
+                    alert("មានបញ្ហាក្នុងការលុប: " + error.message);
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                });
+            }
+        }
+
+        // ==========================================
+        // ៥. របាយការណ៍បូកសរុប 
         // ==========================================
         function generateMonthlyReport() {
-            let monthStr = document.getElementById('reportMonthInput').value; 
-            if (!monthStr) { alert("សូមជ្រើសរើសខែ ដើម្បីបង្កើតរបាយការណ៍!"); return; }
+            let year = document.getElementById('repFilterYear').value; 
+            let month = document.getElementById('repFilterMonth').value; 
 
-            // ត្រងយកតែទិន្នន័យពី Cloud ដែលត្រូវនឹងខែ
-            let monthHistory = cloudHistoryData.filter(h => h.date.startsWith(monthStr));
+            if (year === "" && month === "") {
+                alert("សូមជ្រើសរើសឆ្នាំ ឬខែណាមួយ ដើម្បីបង្កើតរបាយការណ៍!");
+                return;
+            }
 
-            if (monthHistory.length === 0) {
-                alert("មិនមានទិន្នន័យអវត្តមានដែលបានរក្សាទុក នៅក្នុងខែនេះទេ!");
+            let filteredHistory = cloudHistoryData;
+            if (year !== "") filteredHistory = filteredHistory.filter(h => h.date.startsWith(year));
+            if (month !== "") filteredHistory = filteredHistory.filter(h => h.date.includes(month));
+
+            if (filteredHistory.length === 0) {
+                alert("មិនមានទិន្នន័យអវត្តមានដែលបានរក្សាទុក ក្នុងកំលុងពេលនេះទេ!");
                 document.getElementById('monthlyReportContainer').style.display = 'none';
                 document.getElementById('btnPrintReport').style.display = 'none';
                 return;
             }
 
-            let totalSessionsInMonth = monthHistory.length; 
+            let totalSessionsInMonth = filteredHistory.length; 
             let studentRows = document.querySelectorAll('#studentTable tr');
             let studentsData = [];
             
@@ -451,7 +557,7 @@
             });
 
             studentsData.forEach(student => {
-                monthHistory.forEach(session => {
+                filteredHistory.forEach(session => {
                     if (session.absentNames && session.absentNames.includes(student.name)) student.absentCount++;
                     else student.presentCount++;
                 });
@@ -463,8 +569,12 @@
                 tbody.innerHTML += row;
             });
 
-            let parts = monthStr.split('-'); let displayMonth = `${parts[1]}/${parts[0]}`;
-            document.getElementById('reportTitleMonth').innerText = `ខែ/ឆ្នាំ: ${displayMonth}`;
+            let titleText = "";
+            if (year !== "" && month !== "") { titleText = `ប្រចាំខែ ${khmerMonths[month]} ឆ្នាំ ${year}`; } 
+            else if (year !== "") { titleText = `ប្រចាំឆ្នាំ ${year} ពេញមួយឆ្នាំ`; } 
+            else if (month !== "") { titleText = `ប្រចាំខែ ${khmerMonths[month]} (សរុបគ្រប់ឆ្នាំ)`; }
+
+            document.getElementById('reportTitleMonth').innerText = titleText;
             document.getElementById('monthlyReportContainer').style.display = 'block';
             document.getElementById('btnPrintReport').style.display = 'inline-flex'; 
         }
