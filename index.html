@@ -3,211 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#121212">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>ប្រព័ន្ធគ្រប់គ្រងអវត្តមានសិស្ស</title>
+    <title>ប្រព័ន្ធគ្រប់គ្រងអវត្តមានសិស្ស (Cloud Sync)</title>
     
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+
     <style>
-        /* =========================================
-           [ការកំណត់ទូទៅ (Global Styles)]
-           ========================================= */
+        /* CSS រចនាប័ទ្មរក្សាទុកដូចដើមទាំងអស់ */
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            font-family: 'Khmer OS Battambang', sans-serif; 
-            background-color: #121212; 
-            color: #e0e0e0; 
-            padding: 15px; 
-            max-width: 1400px; /* កំណត់ទំហំអតិបរមាលើ PC */
-            margin: 0 auto; 
-            -webkit-font-smoothing: antialiased;
-        }
+        body { font-family: 'Khmer OS Battambang', sans-serif; background-color: #121212; color: #e0e0e0; -webkit-font-smoothing: antialiased; }
         h2, h3 { text-align: center; color: #ffffff; margin: 20px 0 25px 0; font-weight: 600; }
         
-        /* =========================================
-           [រចនាប័ទ្ម Tab (ផ្ទាំងបញ្ជាខាងលើ)]
-           ========================================= */
-        .tab-container { 
-            background-color: #1e1e24; 
-            border-radius: 10px 10px 0 0; 
-            display: flex; 
-            border-bottom: 2px solid #2d2d35;
-            overflow-x: auto; /* អាចអូសបានលើទូរស័ព្ទបើ Tab វែងពេក */
-            -webkit-overflow-scrolling: touch;
-        }
-        .tab-btn { 
-            background-color: transparent; 
-            color: #a0a0a0; 
-            border: none; 
-            outline: none; 
-            cursor: pointer; 
-            padding: 15px 20px; 
-            transition: all 0.3s ease; 
-            font-size: 15px; 
-            font-family: 'Khmer OS Battambang', sans-serif; 
-            flex: 1; 
-            font-weight: bold; 
-            white-space: nowrap;
-        }
+        .auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #121212; display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .auth-box { background-color: #1e1e24; padding: 30px 25px; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid #2d2d35; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
+        .auth-box h2 { margin-top: 0; color: #00d2ff; }
+        .auth-box p { color: #a0a0a0; font-size: 14px; margin-bottom: 20px; }
+        .auth-input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 6px; background-color: #2a2a32; color: #fff; border: 1px solid #40404a; font-family: inherit; font-size: 15px; }
+        .auth-input:focus { outline: none; border-color: #00d2ff; }
+        .auth-btn { width: 100%; padding: 12px; border-radius: 6px; border: none; font-family: inherit; background-color: #006fee; color: white; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .auth-btn:hover { background-color: #005bc4; }
+        .auth-switch { margin-top: 15px; color: #a0a0a0; font-size: 14px; cursor: pointer; }
+        .auth-switch span { color: #00d2ff; text-decoration: underline; }
+
+        #mainApp { display: none; padding: 15px; max-width: 1400px; margin: 0 auto; }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;}
+        .header-bar h2 { margin: 0; }
+        .btn-logout { background-color: #f31260; color: white; padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; font-family: inherit; font-weight: bold; font-size: 14px;}
+        
+        .tab-container { background-color: #1e1e24; border-radius: 10px 10px 0 0; display: flex; border-bottom: 2px solid #2d2d35; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .tab-btn { background-color: transparent; color: #a0a0a0; border: none; outline: none; cursor: pointer; padding: 15px 20px; transition: all 0.3s ease; font-size: 15px; font-family: inherit; flex: 1; font-weight: bold; white-space: nowrap; }
         .tab-btn:hover { color: #ffffff; background-color: rgba(255,255,255,0.05); }
         .tab-btn.active { color: #00d2ff; border-bottom: 3px solid #00d2ff; background-color: rgba(0, 210, 255, 0.05); }
         
-        .tab-content { 
-            display: none; 
-            padding: 25px 20px; 
-            background-color: #16161a; 
-            border-radius: 0 0 10px 10px; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            animation: fadeIn 0.4s ease-in-out; 
-        }
+        .tab-content { display: none; padding: 25px 20px; background-color: #16161a; border-radius: 0 0 10px 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); animation: fadeIn 0.4s ease-in-out; }
         @keyframes fadeIn { from {opacity: 0; transform: translateY(5px);} to {opacity: 1; transform: translateY(0);} }
 
-        /* =========================================
-           [ប្រអប់បញ្ចូលទិន្នន័យ (Forms & Controls)]
-           ========================================= */
-        .controls-container, .add-student-container, .report-controls, .filter-history {
-            display: flex; 
-            justify-content: flex-start; 
-            align-items: flex-end; /* តម្រៀបធាតុឲ្យស្មើបាត */
-            margin-bottom: 20px; 
-            flex-wrap: wrap; 
-            gap: 15px;
-            background-color: #1e1e24; 
-            padding: 20px; 
-            border-radius: 10px; 
-            border: 1px solid #2d2d35;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            flex: 1; /* ពង្រីកពេញចន្លោះទំនេរ */
-            min-width: 150px; /* ការពារមិនឲ្យរួមតូចពេក */
-        }
-        
+        .controls-container, .add-student-container, .report-controls, .filter-history { display: flex; justify-content: flex-start; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; background-color: #1e1e24; padding: 20px; border-radius: 10px; border: 1px solid #2d2d35; }
+        .input-group { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 150px; }
         .input-group label { font-size: 13px; color: #b0b0b0; font-weight: bold; }
 
-        input[type="date"], input[type="text"], input[type="month"], select {
-            background-color: #2a2a32; 
-            color: #ffffff; 
-            border: 1px solid #40404a;
-            padding: 10px 12px; 
-            border-radius: 6px; 
-            font-family: inherit; 
-            width: 100%; 
-            font-size: 14px;
-            transition: border 0.3s ease;
-        }
-        input:focus, select:focus { outline: none; border-color: #00d2ff; background-color: #2f2f38; }
+        input[type="date"], input[type="text"], input[type="month"], select { background-color: #2a2a32; color: #ffffff; border: 1px solid #40404a; padding: 10px 12px; border-radius: 6px; font-family: inherit; width: 100%; font-size: 14px; }
+        input:focus, select:focus { outline: none; border-color: #00d2ff; }
 
-        /* =========================================
-           [រចនាប័ទ្ម តារាង (Responsive Tables)]
-           ========================================= */
-        /* រុំតារាងដើម្បីឲ្យអាចអូសបានលើ Mobile (សំខាន់បំផុត) */
-        .table-wrapper {
-            width: 100%;
-            overflow-x: auto; /* អនុញ្ញាតឲ្យអូសឆ្វេងស្តាំ */
-            -webkit-overflow-scrolling: touch;
-            border-radius: 8px;
-            border: 1px solid #2d2d35;
-            margin-bottom: 20px;
-        }
-        
-        table { width: 100%; border-collapse: collapse; background-color: #1e1e24; min-width: 800px; /* ការពារកុំឲ្យបែកលើទូរស័ព្ទ */ }
+        .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; border: 1px solid #2d2d35; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; background-color: #1e1e24; min-width: 800px; }
         th, td { padding: 14px 12px; border-bottom: 1px solid #2d2d35; text-align: center; font-size: 14px; }
-        th { background-color: #16161a; color: #a0a0a0; white-space: nowrap; font-weight: bold; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
-        tbody tr:hover { background-color: rgba(255,255,255,0.02); }
+        th { background-color: #16161a; color: #a0a0a0; white-space: nowrap; font-weight: bold; font-size: 12px; }
 
-        /* =========================================
-           [រចនាប័ទ្ម ប៊ូតុងទូទៅ]
-           ========================================= */
-        .btn { 
-            padding: 10px 18px; border: none; cursor: pointer; border-radius: 6px; 
-            font-family: 'Khmer OS Battambang', sans-serif; transition: all 0.2s; 
-            font-weight: bold; font-size: 14px; display: inline-flex; justify-content: center; align-items: center; gap: 5px;
-        }
-        .btn:active { transform: scale(0.97); } /* Effect ពេលចុច */
-        
-        /* ប៊ូតុង វត្តមាន / អវត្តមាន ក្នុងតារាង */
+        .btn { padding: 10px 18px; border: none; cursor: pointer; border-radius: 6px; font-family: inherit; transition: all 0.2s; font-weight: bold; font-size: 14px; }
+        .btn:active { transform: scale(0.97); }
         .status-btns { display: flex; gap: 5px; justify-content: center; }
-        .btn-present, .btn-absent { 
-            background-color: #2a2a32; color: #a0a0a0; border: 1px solid #40404a; 
-            padding: 8px 12px; font-size: 13px; border-radius: 5px; flex: 1;
-        }
+        .btn-present, .btn-absent { background-color: #2a2a32; color: #a0a0a0; border: 1px solid #40404a; padding: 8px 12px; font-size: 13px; border-radius: 5px; flex: 1; }
         .active-present { background-color: #17c964 !important; color: #000000 !important; border-color: #17c964 !important; }
         .active-absent { background-color: #f31260 !important; color: #ffffff !important; border-color: #f31260 !important; }
 
-        /* ប៊ូតុង Action ក្នុងតារាង */
         .action-btns { display: flex; gap: 5px; justify-content: center; }
         .btn-edit { background-color: #f5a524; color: #000; padding: 6px 10px; font-size: 12px; }
         .btn-delete { background-color: #f31260; color: #fff; padding: 6px 10px; font-size: 12px; }
 
-        /* ប៊ូតុងបញ្ជាធំៗ */
         .btn-group { display: flex; gap: 15px; margin-top: 25px; flex-wrap: wrap; }
         .btn-save { background-color: #ffffff; color: #000000; padding: 14px 20px; font-size: 16px; flex: 1; min-width: 250px; }
-        .btn-save:hover { background-color: #e0e0e0; }
         .btn-print { background-color: #006fee; color: #ffffff; padding: 14px 20px; font-size: 16px; flex: 1; min-width: 250px; }
-        
-        .btn-add { background-color: #17c964; color: #000; height: 40px; }
+        .btn-add, .btn-generate { background-color: #17c964; color: #000; height: 40px; }
         .btn-update { background-color: #f5a524; color: #000; height: 40px; }
         .btn-view { background-color: #006fee; color: white; padding: 6px 12px; font-size: 12px; }
         .btn-reset { background-color: #3f3f46; color: white; height: 40px; }
-        .btn-generate { background-color: #17c964; color: #000; height: 40px; }
         .btn-print-report { background-color: #006fee; color: white; height: 40px; display: none; }
 
         .report-section { display: none; margin-top: 30px; } 
         .report-header { text-align: center; display: none; margin-bottom: 20px; }
-
-        /* ឈ្មោះអ្នកបង្កើត (Footer) */
         .footer-credit { text-align: center; margin-top: 40px; padding: 20px 0; color: #666; font-size: 14px; border-top: 1px solid #2d2d35; }
-        .footer-credit strong { color: #00d2ff; letter-spacing: 0.5px; }
+        .footer-credit strong { color: #00d2ff; }
 
-        /* =========================================
-           [Mobile Responsive (សម្រាប់ទូរស័ព្ទដៃ)]
-           ========================================= */
         @media screen and (max-width: 768px) {
-            body { padding: 10px; }
+            #mainApp { padding: 10px; }
+            .header-bar { flex-direction: column; text-align: center; }
             .tab-btn { padding: 12px 15px; font-size: 14px; }
-            
-            .controls-container, .add-student-container, .report-controls, .filter-history {
-                flex-direction: column; /* តម្រៀបជាជួរឈរពេញទំហំទូរស័ព្ទ */
-                align-items: stretch; /* ពង្រីកឲ្យស្មើគែម */
-                padding: 15px;
-            }
+            .controls-container, .add-student-container, .report-controls, .filter-history { flex-direction: column; align-items: stretch; padding: 15px; }
             .input-group { min-width: 100%; width: 100%; }
             .btn-add, .btn-update, .btn-reset, .btn-generate, .btn-print-report { width: 100%; margin-top: 10px; }
-            
-            .btn-group { flex-direction: column; } /* ប៊ូតុង Save និង Print ធ្លាក់បន្ទាត់ជាន់គ្នា */
-            
-            /* បង្រួមទំហំតារាងបន្តិចលើ Mobile */
+            .btn-group { flex-direction: column; } 
             th, td { padding: 10px 8px; font-size: 13px; }
-            .status-btns { flex-direction: column; gap: 4px; } /* ប៊ូតុងវត្តមានធ្លាក់លើក្រោម */
-            .action-btns { flex-direction: column; gap: 4px; }
+            .status-btns, .action-btns { flex-direction: column; gap: 4px; }
         }
 
-        /* =========================================
-           [CSS សម្រាប់ការបោះពុម្ព Print]
-           ========================================= */
         @media print {
             body { background-color: #ffffff !important; color: #000000 !important; margin: 0; padding: 0; max-width: 100%; }
-            .tab-container, input, select, button, .add-student-container, .controls-container, .report-controls, .footer-credit { display: none !important; }
+            .tab-container, input, select, button, .add-student-container, .controls-container, .report-controls, .footer-credit, .header-bar .btn-logout { display: none !important; }
             .tab-content { border: none !important; padding: 0 !important; display: block !important; background: transparent !important; box-shadow: none !important; }
-            
-            /* លុប Scrollbar ចេញពេល Print */
             .table-wrapper { border: none !important; overflow: visible !important; margin-bottom: 20px; }
             table { width: 100%; border-collapse: collapse; min-width: 100%; }
             th, td { border: 1px solid #000000 !important; padding: 6px; color: #000000 !important; font-size: 12px; text-align: center; }
             th { background-color: #f2f2f2 !important; color: #000000 !important; }
-
-            /* ១. Print តារាងប្រចាំថ្ងៃ */
             body.print-daily #TabHistory, body.print-daily #TabReport { display: none !important; }
             body.print-daily #TabAttendance { display: block !important; }
             body.print-daily th:nth-child(8), body.print-daily td:nth-child(8) { display: none !important; } 
             body.print-daily .btn-present:not(.active-present), body.print-daily .btn-absent:not(.active-absent) { display: none !important; }
             body.print-daily .active-present, body.print-daily .active-absent { display: block !important; border: none; background: transparent !important; color: #000 !important; padding: 0; font-weight: bold; }
-
-            /* ២. Print របាយការណ៍ខែ */
             body.print-monthly #TabAttendance, body.print-monthly #TabHistory { display: none !important; }
             body.print-monthly #TabReport { display: block !important; }
             body.print-monthly .report-section { display: block !important; }
@@ -217,345 +110,328 @@
 </head>
 <body>
 
-    <h2>ប្រព័ន្ធគ្រប់គ្រងអវត្តមានសិស្ស</h2>
-
-    <div class="tab-container">
-        <button class="tab-btn active" onclick="openTab(event, 'TabAttendance')">📝 កត់វត្តមាន និងសិស្ស</button>
-        <button class="tab-btn" onclick="openTab(event, 'TabHistory')">🕒 ប្រវត្តិអវត្តមាន</button>
-        <button class="tab-btn" onclick="openTab(event, 'TabReport')">📊 របាយការណ៍ប្រចាំខែ</button>
-    </div>
-
-    <div id="TabAttendance" class="tab-content" style="display: block;">
-        
-        <div class="add-student-container">
-            <div class="input-group" style="flex: 0 0 100%; margin-bottom: 5px;">
-                <label style="color: #17c964; font-size: 15px;">+ បញ្ចូលសិស្សថ្មីចូលក្នុងបញ្ជី</label>
-            </div>
-            <div class="input-group">
-                <label>អត្តលេខ</label>
-                <input type="text" id="newStuId" placeholder="ឧ. S004">
-            </div>
-            <div class="input-group">
-                <label>ឈ្មោះសិស្ស</label>
-                <input type="text" id="newStuName" placeholder="ឈ្មោះសិស្ស">
-            </div>
-            <div class="input-group">
-                <label>ភេទ</label>
-                <select id="newStuGender"><option value="ប្រុស">ប្រុស</option><option value="ស្រី">ស្រី</option></select>
-            </div>
-            <div class="input-group">
-                <label>ថ្ងៃខែឆ្នាំកំណើត</label>
-                <input type="date" id="newStuDob">
-            </div>
-            <div class="input-group">
-                <label>ថ្នាក់ទី</label>
-                <input type="text" id="newStuGrade" placeholder="ឧ. ១០ ក">
-            </div>
-            <button id="btnAddUpdate" class="btn btn-add" onclick="addOrUpdateStudent()">បញ្ជូនទិន្នន័យ</button>
+    <div id="authOverlay" class="auth-overlay">
+        <div id="loginBox" class="auth-box">
+            <h2>ចូលប្រើប្រាស់</h2>
+            <p>ប្រព័ន្ធគ្រប់គ្រងអវត្តមានសិស្ស</p>
+            <input type="text" id="loginUsername" class="auth-input" placeholder="ឈ្មោះគណនី (Username)">
+            <input type="password" id="loginPassword" class="auth-input" placeholder="ពាក្យសម្ងាត់ (Password)">
+            <button class="auth-btn" onclick="loginUser()">ចូលគណនី</button>
+            <div class="auth-switch" onclick="toggleAuthMode()">មិនទាន់មានគណនីមែនទេ? <span>បង្កើតគណនីថ្មី</span></div>
         </div>
 
-        <div class="controls-container">
-            <div class="input-group">
-                <label for="date">កាលបរិច្ឆេទ</label>
-                <input type="date" id="date" name="date">
-            </div>
-            <div class="input-group">
-                <label for="timeSlot">ម៉ោងសិក្សា</label>
-                <select id="timeSlot">
-                    <option value="">-- ជ្រើសរើសម៉ោង --</option>
-                    <optgroup label="ពេលព្រឹក">
-                        <option value="៧:០០ - ៨:០០ (ព្រឹក)">៧:០០ - ៨:០០</option>
-                        <option value="៨:០០ - ៩:០០ (ព្រឹក)">៨:០០ - ៩:០០</option>
-                        <option value="៩:០០ - ១០:០០ (ព្រឹក)">៩:០០ - ១០:០០</option>
-                        <option value="១០:០០ - ១១:០០ (ព្រឹក)">១០:០០ - ១១:០០</option>
-                    </optgroup>
-                    <optgroup label="ពេលរសៀល">
-                        <option value="២:០០ - ៣:០០ (រសៀល)">២:០០ - ៣:០០</option>
-                        <option value="៣:០០ - ៤:០០ (រសៀល)">៣:០០ - ៤:០០</option>
-                    </optgroup>
-                </select>
-            </div>
-            <div class="input-group search-box" style="flex: 2;">
-                <label>ស្វែងរកសិស្ស</label>
-                <input type="text" id="searchInput" onkeyup="searchStudent()" placeholder="វាយឈ្មោះ ឬអត្តលេខ...">
-            </div>
-        </div>
-
-        <div class="table-wrapper">
-            <table id="mainTable">
-                <thead>
-                    <tr>
-                        <th style="width: 5%;">ល.រ</th>
-                        <th style="width: 10%;">អត្តលេខ</th>
-                        <th style="width: 20%; text-align: left;">ឈ្មោះសិស្ស</th>
-                        <th style="width: 10%;">ភេទ</th>
-                        <th style="width: 15%;">ថ្ងៃ/ខែ/ឆ្នាំ កំណើត</th>
-                        <th style="width: 10%;">ថ្នាក់ទី</th>
-                        <th style="width: 20%;">ស្ថានភាពវត្តមាន</th>
-                        <th style="width: 10%;">សកម្មភាព</th>
-                    </tr>
-                </thead>
-                <tbody id="studentTable">
-                    <tr>
-                        <td class="stu-index">១</td><td class="stu-id">S001</td><td class="stu-name" style="text-align: left; font-weight: bold;">សុខ សាន្ត</td><td class="stu-gender">ប្រុស</td>
-                        <td class="stu-dob">12/04/2005</td><td class="stu-grade">១០ ក</td>
-                        <td>
-                            <div class="status-btns">
-                                <button class="btn btn-present" onclick="markStatus(this, 'present')">វត្តមាន</button>
-                                <button class="btn btn-absent" onclick="markStatus(this, 'absent')">អវត្តមាន</button>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="action-btns">
-                                <button class="btn btn-edit" onclick="editStudent(this)">កែប្រែ</button>
-                                <button class="btn btn-delete" onclick="deleteStudent(this)">លុប</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="stu-index">២</td><td class="stu-id">S002</td><td class="stu-name" style="text-align: left; font-weight: bold;">ចាន់ ធីតា</td><td class="stu-gender">ស្រី</td>
-                        <td class="stu-dob">25/08/2006</td><td class="stu-grade">១០ ក</td>
-                        <td>
-                            <div class="status-btns">
-                                <button class="btn btn-present" onclick="markStatus(this, 'present')">វត្តមាន</button>
-                                <button class="btn btn-absent" onclick="markStatus(this, 'absent')">អវត្តមាន</button>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="action-btns">
-                                <button class="btn btn-edit" onclick="editStudent(this)">កែប្រែ</button>
-                                <button class="btn btn-delete" onclick="deleteStudent(this)">លុប</button>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="btn-group">
-            <button class="btn btn-save" onclick="saveData()">💾 រក្សាទុកទិន្នន័យអវត្តមាន</button>
-            <button class="btn btn-print" onclick="printDailyReport()">🖨️ បោះពុម្ពវត្តមានថ្ងៃនេះ</button>
+        <div id="registerBox" class="auth-box" style="display: none;">
+            <h2>បង្កើតគណនីថ្មី</h2>
+            <p>ប្រព័ន្ធគ្រប់គ្រងអវត្តមានសិស្ស</p>
+            <input type="text" id="regUsername" class="auth-input" placeholder="បង្កើតឈ្មោះគណនីថ្មី">
+            <input type="password" id="regPassword" class="auth-input" placeholder="បង្កើតពាក្យសម្ងាត់ (យ៉ាងតិច ៦ ខ្ទង់)">
+            <button class="auth-btn" style="background-color: #17c964;" onclick="registerUser()">ចុះឈ្មោះ</button>
+            <div class="auth-switch" onclick="toggleAuthMode()">មានគណនីរួចហើយ? <span>ចូលគណនីវិញ</span></div>
         </div>
     </div>
 
-    <div id="TabHistory" class="tab-content">
-        <div class="filter-history">
-            <div class="input-group">
-                <label for="filterMonth">ស្វែងរកតាមខែ៖ </label>
-                <input type="month" id="filterMonth" onchange="filterHistoryByMonth()">
-            </div>
-            <button class="btn btn-reset" onclick="resetHistoryFilter()">បង្ហាញទាំងអស់</button>
-            <button class="btn btn-delete" style="margin-left: auto;" onclick="clearHistory()">🗑️ សម្អាតប្រវត្តិទាំងអស់</button>
-        </div>
-        
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr><th>កាលបរិច្ឆេទ (ថ្ងៃ/ខែ/ឆ្នាំ)</th><th>ម៉ោងសិក្សា</th><th>ចំនួនសិស្សវត្តមាន</th><th>ចំនួនសិស្សអវត្តមាន</th><th>សកម្មភាព</th></tr>
-                </thead>
-                <tbody id="historyTable"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <div id="TabReport" class="tab-content">
-        <div class="report-controls">
-            <div class="input-group">
-                <label>ជ្រើសរើសខែដើម្បីបូកសរុប៖ </label>
-                <input type="month" id="reportMonthInput">
-            </div>
-            <button class="btn btn-generate" onclick="generateMonthlyReport()">⚙️ បង្កើតរបាយការណ៍</button>
-            <button id="btnPrintReport" class="btn btn-print-report" onclick="printMonthlyReport()">🖨️ បោះពុម្ពរបាយការណ៍</button>
+    <div id="mainApp">
+        <div class="header-bar">
+            <h2>ប្រព័ន្ធគ្រប់គ្រងអវត្តមានសិស្ស</h2>
+            <button class="btn-logout" onclick="logoutUser()">🚪 ចាកចេញ (Logout)</button>
         </div>
 
-        <div class="report-section" id="monthlyReportContainer">
-            <div class="report-header">
-                <h2>របាយការណ៍វត្តមានសិស្សប្រចាំខែ</h2>
-                <h4 id="reportTitleMonth" style="color: #666;">ខែ/ឆ្នាំ: </h4>
+        <div class="tab-container">
+            <button class="tab-btn active" onclick="openTab(event, 'TabAttendance')">📝 កត់វត្តមាន និងសិស្ស</button>
+            <button class="tab-btn" onclick="openTab(event, 'TabHistory')">🕒 ប្រវត្តិអវត្តមាន (Cloud)</button>
+            <button class="tab-btn" onclick="openTab(event, 'TabReport')">📊 របាយការណ៍ខែ</button>
+        </div>
+
+        <div id="TabAttendance" class="tab-content" style="display: block;">
+            <div class="add-student-container">
+                <div class="input-group" style="flex: 0 0 100%; margin-bottom: 5px;"><label style="color: #17c964; font-size: 15px;">+ បញ្ចូលសិស្សថ្មីចូលក្នុងបញ្ជី</label></div>
+                <div class="input-group"><label>អត្តលេខ</label><input type="text" id="newStuId" placeholder="ឧ. S004"></div>
+                <div class="input-group"><label>ឈ្មោះសិស្ស</label><input type="text" id="newStuName" placeholder="ឈ្មោះសិស្ស"></div>
+                <div class="input-group"><label>ភេទ</label><select id="newStuGender"><option value="ប្រុស">ប្រុស</option><option value="ស្រី">ស្រី</option></select></div>
+                <div class="input-group"><label>ថ្ងៃខែឆ្នាំកំណើត</label><input type="date" id="newStuDob"></div>
+                <div class="input-group"><label>ថ្នាក់ទី</label><input type="text" id="newStuGrade" placeholder="ឧ. ១០ ក"></div>
+                <button id="btnAddUpdate" class="btn btn-add" onclick="addOrUpdateStudent()">បញ្ជូនទិន្នន័យ</button>
             </div>
-            
+
+            <div class="controls-container">
+                <div class="input-group"><label for="date">កាលបរិច្ឆេទ</label><input type="date" id="date" name="date"></div>
+                <div class="input-group">
+                    <label for="timeSlot">ម៉ោងសិក្សា</label>
+                    <select id="timeSlot">
+                        <option value="">-- ជ្រើសរើសម៉ោង --</option>
+                        <optgroup label="ពេលព្រឹក"><option value="៧:០០ - ៨:០០ (ព្រឹក)">៧:០០ - ៨:០០</option><option value="៨:០០ - ៩:០០ (ព្រឹក)">៨:០០ - ៩:០០</option><option value="៩:០០ - ១០:០០ (ព្រឹក)">៩:០០ - ១០:០០</option><option value="១០:០០ - ១១:០០ (ព្រឹក)">១០:០០ - ១១:០០</option></optgroup>
+                        <optgroup label="ពេលរសៀល"><option value="២:០០ - ៣:០០ (រសៀល)">២:០០ - ៣:០០</option><option value="៣:០០ - ៤:០០ (រសៀល)">៣:០០ - ៤:០០</option></optgroup>
+                    </select>
+                </div>
+                <div class="input-group search-box" style="flex: 2;"><label>ស្វែងរកសិស្ស</label><input type="text" id="searchInput" onkeyup="searchStudent()" placeholder="វាយឈ្មោះ ឬអត្តលេខ..."></div>
+            </div>
+
             <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ល.រ</th><th>អត្តលេខ</th><th style="text-align: left;">ឈ្មោះសិស្ស</th><th>ភេទ</th><th>ថ្នាក់ទី</th>
-                            <th style="background-color: rgba(23, 201, 100, 0.1); color: #17c964;">វត្តមានសរុប</th>
-                            <th style="background-color: rgba(243, 18, 96, 0.1); color: #f31260;">អវត្តមានសរុប</th>
-                            <th>សរុបម៉ោងសិក្សា</th>
-                        </tr>
-                    </thead>
-                    <tbody id="monthlyReportBody">
+                <table id="mainTable">
+                    <thead><tr><th style="width: 5%;">ល.រ</th><th style="width: 10%;">អត្តលេខ</th><th style="width: 20%; text-align: left;">ឈ្មោះសិស្ស</th><th style="width: 10%;">ភេទ</th><th style="width: 15%;">ថ្ងៃ/ខែ/ឆ្នាំ កំណើត</th><th style="width: 10%;">ថ្នាក់ទី</th><th style="width: 20%;">ស្ថានភាពវត្តមាន</th><th style="width: 10%;">សកម្មភាព</th></tr></thead>
+                    <tbody id="studentTable">
+                        <tr><td class="stu-index">១</td><td class="stu-id">S001</td><td class="stu-name" style="text-align: left; font-weight: bold;">សុខ សាន្ត</td><td class="stu-gender">ប្រុស</td><td class="stu-dob">12/04/2005</td><td class="stu-grade">១០ ក</td><td><div class="status-btns"><button class="btn btn-present" onclick="markStatus(this, 'present')">វត្តមាន</button> <button class="btn btn-absent" onclick="markStatus(this, 'absent')">អវត្តមាន</button></div></td><td><div class="action-btns"><button class="btn btn-edit" onclick="editStudent(this)">កែប្រែ</button> <button class="btn btn-delete" onclick="deleteStudent(this)">លុប</button></div></td></tr>
+                        <tr><td class="stu-index">២</td><td class="stu-id">S002</td><td class="stu-name" style="text-align: left; font-weight: bold;">ចាន់ ធីតា</td><td class="stu-gender">ស្រី</td><td class="stu-dob">25/08/2006</td><td class="stu-grade">១០ ក</td><td><div class="status-btns"><button class="btn btn-present" onclick="markStatus(this, 'present')">វត្តមាន</button> <button class="btn btn-absent" onclick="markStatus(this, 'absent')">អវត្តមាន</button></div></td><td><div class="action-btns"><button class="btn btn-edit" onclick="editStudent(this)">កែប្រែ</button> <button class="btn btn-delete" onclick="deleteStudent(this)">លុប</button></div></td></tr>
                     </tbody>
                 </table>
             </div>
+            <div class="btn-group">
+                <button class="btn btn-save" onclick="saveData()">💾 រក្សាទុកទិន្នន័យអវត្តមាន</button>
+                <button class="btn btn-print" onclick="printDailyReport()">🖨️ បោះពុម្ពវត្តមានថ្ងៃនេះ</button>
+            </div>
         </div>
-    </div>
 
-    <div class="footer-credit">
-        បង្កើតកម្មវិធីអោយ <strong>Rothivong</strong>
+        <div id="TabHistory" class="tab-content">
+            <div class="filter-history">
+                <div class="input-group"><label for="filterMonth">ស្វែងរកតាមខែ៖ </label><input type="month" id="filterMonth" onchange="filterHistoryByMonth()"></div>
+                <button class="btn btn-reset" onclick="resetHistoryFilter()">បង្ហាញទាំងអស់</button>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead><tr><th>កាលបរិច្ឆេទ (ថ្ងៃ/ខែ/ឆ្នាំ)</th><th>ម៉ោងសិក្សា</th><th>ចំនួនសិស្សវត្តមាន</th><th>ចំនួនសិស្សអវត្តមាន</th><th>សកម្មភាព</th></tr></thead>
+                    <tbody id="historyTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="TabReport" class="tab-content">
+            <div class="report-controls">
+                <div class="input-group"><label>ជ្រើសរើសខែដើម្បីបូកសរុប៖ </label><input type="month" id="reportMonthInput"></div>
+                <button class="btn btn-generate" onclick="generateMonthlyReport()">⚙️ បង្កើតរបាយការណ៍</button>
+                <button id="btnPrintReport" class="btn btn-print-report" onclick="printMonthlyReport()">🖨️ បោះពុម្ពរបាយការណ៍</button>
+            </div>
+            <div class="report-section" id="monthlyReportContainer">
+                <div class="report-header"><h2>របាយការណ៍វត្តមានសិស្សប្រចាំខែ</h2><h4 id="reportTitleMonth" style="color: #666;">ខែ/ឆ្នាំ: </h4></div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>ល.រ</th><th>អត្តលេខ</th><th style="text-align: left;">ឈ្មោះសិស្ស</th><th>ភេទ</th><th>ថ្នាក់ទី</th><th style="background-color: rgba(23, 201, 100, 0.1); color: #17c964;">វត្តមានសរុប</th><th style="background-color: rgba(243, 18, 96, 0.1); color: #f31260;">អវត្តមានសរុប</th><th>សរុបម៉ោងសិក្សា</th></tr></thead>
+                        <tbody id="monthlyReportBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-credit">បង្កើតកម្មវិធីអោយ <strong>Rothivong</strong></div>
     </div>
 
     <script>
         // ==========================================
-        // កូដសម្រាប់បញ្ជា Tab ផ្ទាំងខាងលើ
+        // ១. ដាក់ FIREBASE CONFIG របស់អ្នកនៅទីនេះ
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDCEnIctP45mdSHZNeJyPq9HJKlgLlqP3U",
+            authDomain: "student-attendance-2febb.firebaseapp.com",
+            projectId: "student-attendance-2febb",
+            storageBucket: "student-attendance-2febb.firebasestorage.app",
+            messagingSenderId: "752231680647",
+            appId: "1:752231680647:web:0b7cc8ef91208dba940622"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // អថេរផ្ទុកទិន្នន័យប្រវត្តិពី Cloud
+        let cloudHistoryData = [];
+
+        // ==========================================
+        // ២. មុខងារ Authentication (Firebase Login/Register)
+        // ==========================================
+        let isLoginMode = true;
+
+        // ឆែកមើលក្រែងលោគាត់បាន Login រួចហើយ
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById("authOverlay").style.display = "none";
+                document.getElementById("mainApp").style.display = "block";
+                loadHistoryFromCloud(); // ទាញទិន្នន័យប្រវត្តិពី Database មកបង្ហាញ
+            } else {
+                document.getElementById("authOverlay").style.display = "flex";
+                document.getElementById("mainApp").style.display = "none";
+            }
+        });
+
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            document.getElementById("loginBox").style.display = isLoginMode ? "block" : "none";
+            document.getElementById("registerBox").style.display = isLoginMode ? "none" : "block";
+        }
+
+        function registerUser() {
+            let user = document.getElementById("regUsername").value.trim();
+            let pass = document.getElementById("regPassword").value.trim();
+            if (user === "" || pass === "") { alert("សូមបញ្ចូលឈ្មោះគណនី និងពាក្យសម្ងាត់!"); return; }
+            
+            // Firebase ត្រូវការ Email ដូច្នេះយើងបំប្លែង Username ទៅជា Email ក្លែងក្លាយ
+            let fakeEmail = user + "@schoolapp.com";
+
+            auth.createUserWithEmailAndPassword(fakeEmail, pass)
+                .then((userCredential) => {
+                    alert("បង្កើតគណនីបានជោគជ័យ!");
+                    document.getElementById("regUsername").value = "";
+                    document.getElementById("regPassword").value = "";
+                })
+                .catch((error) => {
+                    alert("បញ្ហា: " + error.message);
+                });
+        }
+
+        function loginUser() {
+            let user = document.getElementById("loginUsername").value.trim();
+            let pass = document.getElementById("loginPassword").value.trim();
+            if (user === "" || pass === "") { alert("សូមបញ្ចូលឈ្មោះគណនី និងពាក្យសម្ងាត់!"); return; }
+            
+            let fakeEmail = user + "@schoolapp.com";
+
+            auth.signInWithEmailAndPassword(fakeEmail, pass)
+                .then((userCredential) => {
+                    document.getElementById("loginUsername").value = "";
+                    document.getElementById("loginPassword").value = "";
+                })
+                .catch((error) => {
+                    alert("ឈ្មោះគណនី ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវទេ!");
+                });
+        }
+
+        function logoutUser() {
+            if(confirm("តើអ្នកពិតជាចង់ចាកចេញមែនទេ?")) {
+                auth.signOut();
+            }
+        }
+
+        // ==========================================
+        // ៣. មុខងារបញ្ជា Tab និង UI ទូទៅ
         // ==========================================
         function openTab(evt, tabName) {
-            let i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tab-content");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-            }
-            tablinks = document.getElementsByClassName("tab-btn");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
-            }
+            let tabcontent = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabcontent.length; i++) tabcontent[i].style.display = "none";
+            let tablinks = document.getElementsByClassName("tab-btn");
+            for (let i = 0; i < tablinks.length; i++) tablinks[i].className = tablinks[i].className.replace(" active", "");
             document.getElementById(tabName).style.display = "block";
             evt.currentTarget.className += " active";
         }
 
-        // ==========================================
-        // កូដដំណើរការទូទៅ និងបំប្លែងថ្ងៃខែ
-        // ==========================================
-        let studentCount = 2; 
-        let editingRow = null; 
+        let studentCount = 2; let editingRow = null; 
+        function formatDateToKhmer(dateStr) { if (!dateStr || dateStr === "មិនបានបញ្ជាក់") return dateStr; let parts = dateStr.split('-'); if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`; return dateStr; }
+        function parseDateFromKhmer(dateStr) { if (!dateStr || dateStr === "មិនបានបញ្ជាក់") return ""; let parts = dateStr.split('/'); if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`; return dateStr; }
 
-        function formatDateToKhmer(dateStr) {
-            if (!dateStr || dateStr === "មិនបានបញ្ជាក់") return dateStr;
-            let parts = dateStr.split('-');
-            if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
-            return dateStr;
-        }
-
-        function parseDateFromKhmer(dateStr) {
-            if (!dateStr || dateStr === "មិនបានបញ្ជាក់") return "";
-            let parts = dateStr.split('/');
-            if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
-            return dateStr;
-        }
-
-        window.onload = function() { loadHistory(); };
-
-        // ==========================================
-        // កូដគ្រប់គ្រងសិស្ស និងកត់វត្តមាន
-        // ==========================================
         function addOrUpdateStudent() {
-            let id = document.getElementById("newStuId").value;
-            let name = document.getElementById("newStuName").value;
-            let gender = document.getElementById("newStuGender").value;
-            let dobRaw = document.getElementById("newStuDob").value;
-            let grade = document.getElementById("newStuGrade").value;
-
+            let id = document.getElementById("newStuId").value; let name = document.getElementById("newStuName").value;
+            let gender = document.getElementById("newStuGender").value; let dobRaw = document.getElementById("newStuDob").value; let grade = document.getElementById("newStuGrade").value;
             if(id.trim() === "" || name.trim() === "") { alert("សូមបញ្ចូលអត្តលេខ និងឈ្មោះសិស្ស!"); return; }
-            let dob = dobRaw ? formatDateToKhmer(dobRaw) : "មិនបានបញ្ជាក់";
-            if(grade.trim() === "") grade = "មិនបានបញ្ជាក់";
+            let dob = dobRaw ? formatDateToKhmer(dobRaw) : "មិនបានបញ្ជាក់"; if(grade.trim() === "") grade = "មិនបានបញ្ជាក់";
 
             if (editingRow) {
-                editingRow.querySelector(".stu-id").innerText = id;
-                editingRow.querySelector(".stu-name").innerText = name;
-                editingRow.querySelector(".stu-gender").innerText = gender;
-                editingRow.querySelector(".stu-dob").innerText = dob;
-                editingRow.querySelector(".stu-grade").innerText = grade;
-                editingRow = null;
-                let btn = document.getElementById("btnAddUpdate");
-                btn.innerText = "បញ្ជូនទិន្នន័យ"; btn.classList.replace("btn-update", "btn-add");
+                editingRow.querySelector(".stu-id").innerText = id; editingRow.querySelector(".stu-name").innerText = name;
+                editingRow.querySelector(".stu-gender").innerText = gender; editingRow.querySelector(".stu-dob").innerText = dob;
+                editingRow.querySelector(".stu-grade").innerText = grade; editingRow = null;
+                let btn = document.getElementById("btnAddUpdate"); btn.innerText = "បញ្ជូនទិន្នន័យ"; btn.classList.replace("btn-update", "btn-add");
             } else {
-                studentCount++;
-                let table = document.getElementById("studentTable");
-                let row = document.createElement("tr");
+                studentCount++; let table = document.getElementById("studentTable"); let row = document.createElement("tr");
                 row.innerHTML = `<td class="stu-index">${studentCount}</td><td class="stu-id">${id}</td><td class="stu-name" style="text-align: left; font-weight: bold;">${name}</td><td class="stu-gender">${gender}</td><td class="stu-dob">${dob}</td><td class="stu-grade">${grade}</td><td><div class="status-btns"><button class="btn btn-present" onclick="markStatus(this, 'present')">វត្តមាន</button> <button class="btn btn-absent" onclick="markStatus(this, 'absent')">អវត្តមាន</button></div></td><td><div class="action-btns"><button class="btn btn-edit" onclick="editStudent(this)">កែប្រែ</button> <button class="btn btn-delete" onclick="deleteStudent(this)">លុប</button></div></td>`;
                 table.appendChild(row); updateIndex(); 
             }
             document.getElementById("newStuId").value = ""; document.getElementById("newStuName").value = ""; document.getElementById("newStuDob").value = ""; document.getElementById("newStuGrade").value = "";
         }
 
-        function editStudent(button) {
-            let row = button.closest("tr");
-            document.getElementById("newStuId").value = row.querySelector(".stu-id").innerText;
-            document.getElementById("newStuName").value = row.querySelector(".stu-name").innerText;
-            document.getElementById("newStuGender").value = row.querySelector(".stu-gender").innerText;
-            let dobValue = row.querySelector(".stu-dob").innerText; document.getElementById("newStuDob").value = parseDateFromKhmer(dobValue);
-            let gradeValue = row.querySelector(".stu-grade").innerText; document.getElementById("newStuGrade").value = (gradeValue === "មិនបានបញ្ជាក់") ? "" : gradeValue;
-            editingRow = row; let btn = document.getElementById("btnAddUpdate"); btn.innerText = "✓ រក្សាទុកការកែប្រែ"; btn.classList.replace("btn-add", "btn-update");
-        }
-
+        function editStudent(button) { let row = button.closest("tr"); document.getElementById("newStuId").value = row.querySelector(".stu-id").innerText; document.getElementById("newStuName").value = row.querySelector(".stu-name").innerText; document.getElementById("newStuGender").value = row.querySelector(".stu-gender").innerText; let dobValue = row.querySelector(".stu-dob").innerText; document.getElementById("newStuDob").value = parseDateFromKhmer(dobValue); let gradeValue = row.querySelector(".stu-grade").innerText; document.getElementById("newStuGrade").value = (gradeValue === "មិនបានបញ្ជាក់") ? "" : gradeValue; editingRow = row; let btn = document.getElementById("btnAddUpdate"); btn.innerText = "✓ រក្សាទុកការកែប្រែ"; btn.classList.replace("btn-add", "btn-update"); }
         function deleteStudent(button) { if(confirm("តើអ្នកពិតជាចង់លុបសិស្សនេះចេញពីបញ្ជីមែនទេ?")) { button.closest("tr").remove(); updateIndex(); } }
         function updateIndex() { let rows = document.querySelectorAll("#studentTable tr"); studentCount = 0; rows.forEach((row, index) => { studentCount = index + 1; row.querySelector(".stu-index").innerText = studentCount; }); }
         function searchStudent() { let input = document.getElementById("searchInput").value.toLowerCase(); let rows = document.querySelectorAll("#studentTable tr"); rows.forEach(row => { let id = row.querySelector(".stu-id").innerText.toLowerCase(); let name = row.querySelector(".stu-name").innerText.toLowerCase(); if (id.includes(input) || name.includes(input)) row.style.display = ""; else row.style.display = "none"; }); }
         function markStatus(button, status) { let row = button.closest("tr"); let pBtn = row.querySelector('.btn-present'); let aBtn = row.querySelector('.btn-absent'); pBtn.classList.remove('active-present'); aBtn.classList.remove('active-absent'); if (status === 'present') pBtn.classList.add('active-present'); else if (status === 'absent') aBtn.classList.add('active-absent'); }
 
+        // ==========================================
+        // ៤. មុខងារ Save និង ទាញទិន្នន័យជាមួយ Firestore
+        // ==========================================
         function saveData() {
             const rawDate = document.getElementById('date').value; const timeSlot = document.getElementById('timeSlot').value; 
             if (!rawDate) { alert("សូមជ្រើសរើសកាលបរិច្ឆេទជាមុនសិន!"); return; }
             if (!timeSlot) { alert("សូមជ្រើសរើសម៉ោងសិក្សាជាមុនសិន!"); return; }
 
             const rows = document.querySelectorAll('#studentTable tr');
-            let attendanceList = []; let totalPresent = 0; let totalAbsent = 0; let absentNames = [];
-            let formattedDisplayDate = formatDateToKhmer(rawDate); 
-
+            let totalPresent = 0; let totalAbsent = 0; let absentNames = [];
+            
             rows.forEach(row => {
-                let id = row.querySelector('.stu-id').innerText; let name = row.querySelector('.stu-name').innerText;
-                let gender = row.querySelector('.stu-gender').innerText; let dob = row.querySelector('.stu-dob').innerText; let grade = row.querySelector('.stu-grade').innerText;
-                let isPresent = row.querySelector('.active-present'); let isAbsent = row.querySelector('.active-absent'); let status = "";
-                
-                if (isPresent) { status = "វត្តមាន"; totalPresent++; } 
-                else if (isAbsent) { status = "អវត្តមាន"; totalAbsent++; absentNames.push(name); }
-                
-                if (status !== "") attendanceList.push({ date: formattedDisplayDate, time: timeSlot, id: id, name: name, gender: gender, dob: dob, grade: grade, status: status }); 
+                let name = row.querySelector('.stu-name').innerText;
+                let isPresent = row.querySelector('.active-present'); 
+                let isAbsent = row.querySelector('.active-absent'); 
+                if (isPresent) { totalPresent++; } else if (isAbsent) { totalAbsent++; absentNames.push(name); }
             });
 
-            if (attendanceList.length === 0) { alert("សូមគូសវត្តមានសិស្សយ៉ាងហោចណាស់ម្នាក់!"); return; }
+            if (totalPresent + totalAbsent === 0) { alert("សូមគូសវត្តមានសិស្សយ៉ាងហោចណាស់ម្នាក់!"); return; }
 
-            saveToLocalHistory(rawDate, timeSlot, totalPresent, totalAbsent, absentNames);
+            document.querySelector('.btn-save').innerText = "កំពុងរក្សាទុកទៅ Cloud...";
 
-            const scriptURL = 'ដាក់_LINK_WEB_APP_របស់អ្នក_នៅទីនេះ'; 
-            if (scriptURL === 'ដាក់_LINK_WEB_APP_របស់អ្នក_នៅទីនេះ') { alert("ទិន្នន័យត្រូវបានរក្សាទុកក្នុងប្រវត្តិដោយជោគជ័យ!"); resetFormButtons(rows); return; }
-
-            document.querySelector('.btn-save').innerText = "កំពុងរក្សាទុក...";
-            fetch(scriptURL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(attendanceList) })
-            .then(response => { alert("រក្សាទុកទៅ Google Sheets ជោគជ័យ!"); resetFormButtons(rows); })
-            .catch(error => { alert("រក្សាទុកទៅ Google Sheets បរាជ័យ ប៉ុន្តែមានក្នុងប្រវត្តិ!"); resetFormButtons(rows); });
+            // បញ្ជូនទិន្នន័យទៅ Cloud Firestore
+            db.collection("attendanceHistory").add({
+                date: rawDate,
+                time: timeSlot,
+                totalPresent: totalPresent,
+                totalAbsent: totalAbsent,
+                absentNames: absentNames,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp() // កំណត់ត្រាពេល Save
+            })
+            .then(() => {
+                alert("ទិន្នន័យត្រូវបានរក្សាទុកក្នុង Cloud ដោយជោគជ័យ!");
+                resetFormButtons(rows);
+                loadHistoryFromCloud(); // ទាញទិន្នន័យមកបង្ហាញវិញភ្លាមៗ
+            })
+            .catch((error) => {
+                alert("មានបញ្ហាក្នុងការរក្សាទុក: " + error.message);
+                resetFormButtons(rows);
+            });
         }
+
         function resetFormButtons(rows) { rows.forEach(row => { let pBtn = row.querySelector('.btn-present'); let aBtn = row.querySelector('.btn-absent'); if(pBtn) pBtn.classList.remove('active-present'); if(aBtn) aBtn.classList.remove('active-absent'); }); document.querySelector('.btn-save').innerText = "💾 រក្សាទុកទិន្នន័យអវត្តមាន"; }
 
-        // ==========================================
-        // កូដប្រវត្តិអវត្តមាន
-        // ==========================================
-        function saveToLocalHistory(date, timeSlot, present, absent, absentNames) {
-            let history = JSON.parse(localStorage.getItem('attendanceHistory')) || [];
-            history = history.filter(item => !(item.date === date && item.time === timeSlot));
-            history.push({ date: date, time: timeSlot, totalPresent: present, totalAbsent: absent, absentNames: absentNames });
-            history.sort((a, b) => new Date(b.date) - new Date(a.date));
-            localStorage.setItem('attendanceHistory', JSON.stringify(history));
-            resetHistoryFilter(); 
+        // មុខងារទាញទិន្នន័យពី Firebase Firestore
+        function loadHistoryFromCloud() {
+            db.collection("attendanceHistory").orderBy("date", "desc").get().then((querySnapshot) => {
+                cloudHistoryData = []; // សម្អាត Array ចាស់
+                querySnapshot.forEach((doc) => {
+                    cloudHistoryData.push(doc.data());
+                });
+                renderHistoryTable(cloudHistoryData); // បង្ហាញលើតារាង
+            }).catch((error) => {
+                console.log("Error getting documents: ", error);
+            });
         }
 
-        function loadHistory(filterMonth = "") {
-            let history = JSON.parse(localStorage.getItem('attendanceHistory')) || [];
-            let tableBody = document.getElementById("historyTable"); tableBody.innerHTML = "";
-            if (filterMonth !== "") history = history.filter(record => record.date.startsWith(filterMonth));
-            if (history.length === 0) { tableBody.innerHTML = `<tr><td colspan="5" style="color: #666; padding: 30px;">គ្មានទិន្នន័យទេ</td></tr>`; return; }
+        function renderHistoryTable(dataArray) {
+            let tableBody = document.getElementById("historyTable"); 
+            tableBody.innerHTML = "";
+            if (dataArray.length === 0) { tableBody.innerHTML = `<tr><td colspan="5" style="color: #666; padding: 30px;">មិនទាន់មានទិន្នន័យអវត្តមានក្នុង Cloud ទេ</td></tr>`; return; }
 
-            history.forEach(record => {
+            dataArray.forEach(record => {
                 let namesString = record.absentNames.length > 0 ? record.absentNames.join(', ') : 'គ្មាន';
                 let displayDate = formatDateToKhmer(record.date);
                 let row = `<tr><td>${displayDate}</td><td style="color: #00d2ff;">${record.time}</td><td style="color: #17c964; font-weight: bold;">${record.totalPresent}</td><td style="color: #f31260; font-weight: bold;">${record.totalAbsent}</td><td><button class="btn btn-view" onclick="viewDetails('${record.date}', '${record.time}', '${namesString}')">មើលលម្អិត</button></td></tr>`;
                 tableBody.innerHTML += row;
             });
         }
-        function filterHistoryByMonth() { loadHistory(document.getElementById("filterMonth").value); }
-        function resetHistoryFilter() { document.getElementById("filterMonth").value = ""; loadHistory(""); }
+
+        function filterHistoryByMonth() { 
+            let filterMonth = document.getElementById("filterMonth").value; 
+            if (filterMonth === "") {
+                renderHistoryTable(cloudHistoryData);
+            } else {
+                let filteredData = cloudHistoryData.filter(record => record.date.startsWith(filterMonth));
+                renderHistoryTable(filteredData);
+            }
+        }
+        function resetHistoryFilter() { document.getElementById("filterMonth").value = ""; renderHistoryTable(cloudHistoryData); }
         function viewDetails(date, time, namesString) { let displayDate = formatDateToKhmer(date); alert(`📅 កាលបរិច្ឆេទ: ${displayDate}\n⏰ ម៉ោង: ${time}\n\nសិស្សអវត្តមាន:\n👉 ${namesString}`); }
-        function clearHistory() { if(confirm("តើចង់លុបប្រវត្តិទាំងអស់មែនទេ?")) { localStorage.removeItem('attendanceHistory'); loadHistory(); } }
 
         // ==========================================
-        // កូដរបាយការណ៍ប្រចាំខែ
+        // ៥. កូដរបាយការណ៍ប្រចាំខែ (ប្រើទិន្នន័យពី Cloud)
         // ==========================================
         function generateMonthlyReport() {
             let monthStr = document.getElementById('reportMonthInput').value; 
             if (!monthStr) { alert("សូមជ្រើសរើសខែ ដើម្បីបង្កើតរបាយការណ៍!"); return; }
 
-            let history = JSON.parse(localStorage.getItem('attendanceHistory')) || [];
-            let monthHistory = history.filter(h => h.date.startsWith(monthStr));
+            // ត្រងយកតែទិន្នន័យពី Cloud ដែលត្រូវនឹងខែ
+            let monthHistory = cloudHistoryData.filter(h => h.date.startsWith(monthStr));
 
             if (monthHistory.length === 0) {
                 alert("មិនមានទិន្នន័យអវត្តមានដែលបានរក្សាទុក នៅក្នុងខែនេះទេ!");
@@ -569,16 +445,14 @@
             let studentsData = [];
             
             studentRows.forEach(row => {
-                let id = row.querySelector('.stu-id').innerText;
-                let name = row.querySelector('.stu-name').innerText;
-                let gender = row.querySelector('.stu-gender').innerText;
-                let grade = row.querySelector('.stu-grade').innerText;
+                let id = row.querySelector('.stu-id').innerText; let name = row.querySelector('.stu-name').innerText;
+                let gender = row.querySelector('.stu-gender').innerText; let grade = row.querySelector('.stu-grade').innerText;
                 studentsData.push({ id: id, name: name, gender: gender, grade: grade, presentCount: 0, absentCount: 0 });
             });
 
             studentsData.forEach(student => {
                 monthHistory.forEach(session => {
-                    if (session.absentNames.includes(student.name)) student.absentCount++;
+                    if (session.absentNames && session.absentNames.includes(student.name)) student.absentCount++;
                     else student.presentCount++;
                 });
             });
@@ -595,20 +469,8 @@
             document.getElementById('btnPrintReport').style.display = 'inline-flex'; 
         }
 
-        // ==========================================
-        // កូដសម្រាប់បោះពុម្ព (Print)
-        // ==========================================
-        function printDailyReport() {
-            document.body.classList.add('print-daily');
-            window.print();
-            setTimeout(() => { document.body.classList.remove('print-daily'); }, 1000);
-        }
-
-        function printMonthlyReport() {
-            document.body.classList.add('print-monthly');
-            window.print();
-            setTimeout(() => { document.body.classList.remove('print-monthly'); }, 1000);
-        }
+        function printDailyReport() { document.body.classList.add('print-daily'); window.print(); setTimeout(() => { document.body.classList.remove('print-daily'); }, 1000); }
+        function printMonthlyReport() { document.body.classList.add('print-monthly'); window.print(); setTimeout(() => { document.body.classList.remove('print-monthly'); }, 1000); }
     </script>
 
 </body>
