@@ -50,12 +50,21 @@
         input[type="date"], input[type="text"], select { background-color: #2a2a32; color: #ffffff; border: 1px solid #40404a; padding: 10px 12px; border-radius: 6px; font-family: inherit; width: 100%; font-size: 14px; }
         input:focus, select:focus { outline: none; border-color: #00d2ff; }
 
+        /* ប៊ូតុងជ្រើសរើសទាំងអស់ (Bulk Actions) */
+        .bulk-actions { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; background-color: #1e1e24; padding: 10px 15px; border-radius: 8px; border: 1px dashed #444; align-items: center;}
+        .bulk-actions span { color: #a0a0a0; font-size: 13px; margin-right: 5px; }
+
         .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; border: 1px solid #2d2d35; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; background-color: #1e1e24; min-width: 800px; }
         th, td { padding: 14px 12px; border-bottom: 1px solid #2d2d35; text-align: center; font-size: 14px; }
         th { background-color: #16161a; color: #a0a0a0; white-space: nowrap; font-weight: bold; font-size: 12px; }
 
-        .btn { padding: 10px 18px; border: none; cursor: pointer; border-radius: 6px; font-family: inherit; transition: all 0.2s; font-weight: bold; font-size: 14px; }
+        .schedule-table input { width: 100%; min-width: 100px; text-align: center; border: 1px solid #444; background: #222; }
+        .schedule-table input:focus { border-color: #17c964; background: #111; }
+        .schedule-table th { background-color: #004466; color: white; border: 1px solid #005580; }
+        .schedule-table td { border: 1px solid #333; padding: 5px; }
+
+        .btn { padding: 10px 18px; border: none; cursor: pointer; border-radius: 6px; font-family: inherit; transition: all 0.2s; font-weight: bold; font-size: 14px; display: inline-flex; justify-content: center; align-items: center;}
         .btn:active { transform: scale(0.97); }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         
@@ -87,7 +96,7 @@
         @media screen and (max-width: 768px) {
             #mainApp { padding: 10px; }
             .header-bar { flex-direction: column; text-align: center; }
-            .tab-btn { padding: 12px 15px; font-size: 14px; }
+            .tab-btn { padding: 12px 10px; font-size: 13px; }
             .controls-container, .add-student-container, .report-controls, .filter-history { flex-direction: column; align-items: stretch; padding: 15px; }
             .input-group { min-width: 100%; width: 100%; }
             .btn-add, .btn-update, .btn-reset, .btn-generate, .btn-print-report, .btn-export-excel, .btn-delete { width: 100%; margin-top: 10px; }
@@ -98,18 +107,18 @@
 
         @media print {
             body { background-color: #ffffff !important; color: #000000 !important; margin: 0; padding: 0; max-width: 100%; }
-            .tab-container, input, select, button, .add-student-container, .controls-container, .report-controls, .filter-history, .footer-credit, .header-bar .btn-logout { display: none !important; }
+            .tab-container, input:not([readonly]), select, button, .add-student-container, .controls-container, .report-controls, .filter-history, .footer-credit, .header-bar .btn-logout, .bulk-actions { display: none !important; }
             .tab-content { border: none !important; padding: 0 !important; display: block !important; background: transparent !important; box-shadow: none !important; }
             .table-wrapper { border: none !important; overflow: visible !important; margin-bottom: 20px; }
             table { width: 100%; border-collapse: collapse; min-width: 100%; }
             th, td { border: 1px solid #000000 !important; padding: 6px; color: #000000 !important; font-size: 12px; text-align: center; }
             th { background-color: #f2f2f2 !important; color: #000000 !important; }
-            body.print-daily #TabHistory, body.print-daily #TabReport { display: none !important; }
+            body.print-daily #TabHistory, body.print-daily #TabReport, body.print-daily #TabSchedule { display: none !important; }
             body.print-daily #TabAttendance { display: block !important; }
             body.print-daily th:nth-child(8), body.print-daily td:nth-child(8) { display: none !important; } 
             body.print-daily .btn-present:not(.active-present), body.print-daily .btn-absent:not(.active-absent) { display: none !important; }
             body.print-daily .active-present, body.print-daily .active-absent { display: block !important; border: none; background: transparent !important; color: #000 !important; padding: 0; font-weight: bold; }
-            body.print-monthly #TabAttendance, body.print-monthly #TabHistory { display: none !important; }
+            body.print-monthly #TabAttendance, body.print-monthly #TabHistory, body.print-monthly #TabSchedule { display: none !important; }
             body.print-monthly #TabReport { display: block !important; }
             body.print-monthly .report-section { display: block !important; }
             body.print-monthly .report-header { display: block !important; color: #000 !important; margin-bottom: 20px; }
@@ -127,7 +136,6 @@
             <button class="auth-btn" onclick="loginUser()">ចូលគណនី</button>
             <div class="auth-switch" onclick="toggleAuthMode()">មិនទាន់មានគណនីមែនទេ? <span>បង្កើតគណនីថ្មី</span></div>
         </div>
-
         <div id="registerBox" class="auth-box" style="display: none;">
             <h2>បង្កើតគណនីថ្មី</h2>
             <p>ប្រព័ន្ធគ្រប់គ្រងអវត្តមានសិស្ស</p>
@@ -141,11 +149,12 @@
     <div id="mainApp">
         <div class="header-bar">
             <h2>ប្រព័ន្ធគ្រប់គ្រងអវត្តមានសិស្ស</h2>
-            <button class="btn-logout" onclick="logoutUser()">🚪 ចាកចេញ (Logout)</button>
+            <button class="btn-logout" onclick="logoutUser()">🚪 ចាកចេញ</button>
         </div>
 
         <div class="tab-container">
-            <button class="tab-btn active" onclick="openTab(event, 'TabAttendance')">📝 កត់វត្តមាន និងសិស្ស</button>
+            <button class="tab-btn active" onclick="openTab(event, 'TabAttendance')">📝 កត់វត្តមាន</button>
+            <button class="tab-btn" onclick="openTab(event, 'TabSchedule')">📅 កាលវិភាគ</button>
             <button class="tab-btn" onclick="openTab(event, 'TabHistory')">🕒 ប្រវត្តិអវត្តមាន</button>
             <button class="tab-btn" onclick="openTab(event, 'TabReport')">📊 របាយការណ៍</button>
         </div>
@@ -162,16 +171,46 @@
             </div>
 
             <div class="controls-container">
-                <div class="input-group"><label for="date">កាលបរិច្ឆេទ</label><input type="date" id="date" name="date"></div>
                 <div class="input-group">
-                    <label for="timeSlot">ម៉ោងសិក្សា</label>
-                    <select id="timeSlot">
+                    <label for="date">កាលបរិច្ឆេទ</label>
+                    <input type="date" id="date" name="date" onchange="autoDetectSubject()">
+                </div>
+                <div class="input-group">
+                    <label for="timeSlot">ម៉ោងសិក្សា (ជ្រើសរើសម៉ោងរួមបញ្ចូលគ្នា)</label>
+                    <select id="timeSlot" onchange="autoDetectSubject()">
                         <option value="">-- ជ្រើសរើសម៉ោង --</option>
-                        <optgroup label="ពេលព្រឹក"><option value="៧:០០ - ៨:០០ (ព្រឹក)">៧:០០ - ៨:០០</option><option value="៨:០០ - ៩:០០ (ព្រឹក)">៨:០០ - ៩:០០</option><option value="៩:០០ - ១0:០០ (ព្រឹក)">៩:០០ - ១០:០០</option><option value="១០:០០ - ១១:០០ (ព្រឹក)">១០:០០ - ១១:០០</option></optgroup>
-                        <optgroup label="ពេលរសៀល"><option value="២:០០ - ៣:០០ (រសៀល)">២:០០ - ៣:០០</option><option value="៣:០០ - ៤:០០ (រសៀល)">៣:០០ - ៤:០០</option></optgroup>
+                        <optgroup label="ពេលព្រឹក (១ ម៉ោង)">
+                            <option value="៧:០០ - ៨:០០ (ព្រឹក)">៧:០០ - ៨:០០</option>
+                            <option value="៨:០០ - ៩:០០ (ព្រឹក)">៨:០០ - ៩:០០</option>
+                            <option value="៩:០០ - ១០:០០ (ព្រឹក)">៩:០០ - ១០:០០</option>
+                            <option value="១០:០០ - ១១:០០ (ព្រឹក)">១០:០០ - ១១:០០</option>
+                        </optgroup>
+                        <optgroup label="ពេលព្រឹក (២ ម៉ោងជាប់គ្នា)">
+                            <option value="៧:០០ - ៩:០០ (ព្រឹក) ២ម៉ោង">៧:០០ - ៩:០០ (២ ម៉ោង)</option>
+                            <option value="៩:០០ - ១១:០០ (ព្រឹក) ២ម៉ោង">៩:០០ - ១១:០០ (២ ម៉ោង)</option>
+                        </optgroup>
+                        <optgroup label="ពេលរសៀល">
+                            <option value="២:០០ - ៣:០០ (រសៀល)">២:០០ - ៣:០០</option>
+                            <option value="៣:០០ - ៤:០០ (រសៀល)">៣:០០ - ៤:០០</option>
+                            <option value="២:០០ - ៤:០០ (រសៀល) ២ម៉ោង">២:០០ - ៤:០០ (២ ម៉ោង)</option>
+                        </optgroup>
                     </select>
                 </div>
-                <div class="input-group search-box" style="flex: 2;"><label>ស្វែងរកសិស្ស</label><input type="text" id="searchInput" onkeyup="searchStudent()" placeholder="វាយឈ្មោះ ឬអត្តលេខ..."></div>
+                <div class="input-group" style="flex: 1.5;">
+                    <label style="color:#00d2ff;">មុខវិជ្ជា (ចាប់ស្វ័យប្រវត្តិពីកាលវិភាគ)៖</label>
+                    <input type="text" id="currentSubject" readonly style="background-color: #111; color: #17c964; font-weight: bold; border-color:#00d2ff;" placeholder="សូមជ្រើសរើសថ្ងៃ និងម៉ោងសិន...">
+                </div>
+                <div class="input-group search-box" style="flex: 1.5;">
+                    <label>ស្វែងរកសិស្ស</label>
+                    <input type="text" id="searchInput" onkeyup="searchStudent()" placeholder="វាយឈ្មោះ ឬអត្តលេខ...">
+                </div>
+            </div>
+
+            <div class="bulk-actions">
+                <span>គូសក្នុងពេលតែមួយ៖</span>
+                <button class="btn btn-bulk-p" style="background-color: #17c964; color: #000;" onclick="markAllStatus('present')">✓ វត្តមានទាំងអស់</button>
+                <button class="btn btn-bulk-a" style="background-color: #f31260; color: #fff;" onclick="markAllStatus('absent')">✗ អវត្តមានទាំងអស់</button>
+                <button class="btn btn-bulk-c" style="background-color: #3f3f46; color: #fff; margin-left: auto;" onclick="markAllStatus('clear')">🧹 លុបការជ្រើសរើស</button>
             </div>
 
             <div class="table-wrapper">
@@ -189,30 +228,47 @@
             </div>
         </div>
 
+        <div id="TabSchedule" class="tab-content">
+            <h3 style="margin-top:0; color:#17c964;">កាលវិភាគប្រចាំសប្តាហ៍</h3>
+            <p style="text-align:center; color:#aaa; margin-bottom: 20px;">សូមវាយបញ្ចូលមុខវិជ្ជាទៅតាមម៉ោងនិងថ្ងៃ រួចចុចប៊ូតុងរក្សាទុកខាងក្រោម។</p>
+            
+            <div class="table-wrapper">
+                <table class="schedule-table">
+                    <thead>
+                        <tr><th>ម៉ោង \ ថ្ងៃ</th><th>ច័ន្ទ</th><th>អង្គារ</th><th>ពុធ</th><th>ព្រហស្បតិ៍</th><th>សុក្រ</th><th>សៅរ៍</th></tr>
+                    </thead>
+                    <tbody id="scheduleBody">
+                        <tr><td style="font-weight:bold; color:#00d2ff;">៧:០០ - ៨:០០</td><td><input type="text" id="sch_1_1"></td><td><input type="text" id="sch_2_1"></td><td><input type="text" id="sch_3_1"></td><td><input type="text" id="sch_4_1"></td><td><input type="text" id="sch_5_1"></td><td><input type="text" id="sch_6_1"></td></tr>
+                        <tr><td style="font-weight:bold; color:#00d2ff;">៨:០០ - ៩:០០</td><td><input type="text" id="sch_1_2"></td><td><input type="text" id="sch_2_2"></td><td><input type="text" id="sch_3_2"></td><td><input type="text" id="sch_4_2"></td><td><input type="text" id="sch_5_2"></td><td><input type="text" id="sch_6_2"></td></tr>
+                        <tr><td style="font-weight:bold; color:#00d2ff;">៩:០០ - ១០:០០</td><td><input type="text" id="sch_1_3"></td><td><input type="text" id="sch_2_3"></td><td><input type="text" id="sch_3_3"></td><td><input type="text" id="sch_4_3"></td><td><input type="text" id="sch_5_3"></td><td><input type="text" id="sch_6_3"></td></tr>
+                        <tr><td style="font-weight:bold; color:#00d2ff;">១០:០០ - ១១:០០</td><td><input type="text" id="sch_1_4"></td><td><input type="text" id="sch_2_4"></td><td><input type="text" id="sch_3_4"></td><td><input type="text" id="sch_4_4"></td><td><input type="text" id="sch_5_4"></td><td><input type="text" id="sch_6_4"></td></tr>
+                        <tr><td colspan="7" style="background:#333; color:#fff; font-weight:bold; letter-spacing: 2px;">  (រសៀល)</td></tr>
+                        <tr><td style="font-weight:bold; color:#f5a524;">២:០០ - ៣:០០</td><td><input type="text" id="sch_1_5"></td><td><input type="text" id="sch_2_5"></td><td><input type="text" id="sch_3_5"></td><td><input type="text" id="sch_4_5"></td><td><input type="text" id="sch_5_5"></td><td><input type="text" id="sch_6_5"></td></tr>
+                        <tr><td style="font-weight:bold; color:#f5a524;">៣:០០ - ៤:០០</td><td><input type="text" id="sch_1_6"></td><td><input type="text" id="sch_2_6"></td><td><input type="text" id="sch_3_6"></td><td><input type="text" id="sch_4_6"></td><td><input type="text" id="sch_5_6"></td><td><input type="text" id="sch_6_6"></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div style="text-align:center; margin-top:15px;">
+                <button class="btn btn-save" onclick="saveScheduleToCloud()" id="btnSaveSchedule">💾 រក្សាទុកកាលវិភាគទៅ Cloud</button>
+            </div>
+        </div>
+
         <div id="TabHistory" class="tab-content">
             <div class="filter-history">
                 <div class="input-group">
                     <label>ជ្រើសរើសឆ្នាំ៖</label>
-                    <select id="histFilterYear" onchange="filterHistoryAdvanced()">
-                        <option value="">-- គ្រប់ឆ្នាំ --</option>
-                        <option value="2026">២០២៦</option>
-                        <option value="2025">២០២៥</option>
-                        <option value="2024">២០២៤</option>
-                    </select>
+                    <select id="histFilterYear" onchange="filterHistoryAdvanced()"><option value="">-- គ្រប់ឆ្នាំ --</option><option value="2026">២០២៦</option><option value="2025">២០២៥</option><option value="2024">២០២៤</option></select>
                 </div>
                 <div class="input-group">
                     <label>ជ្រើសរើសខែ៖</label>
-                    <select id="histFilterMonth" onchange="filterHistoryAdvanced()">
-                        <option value="">-- គ្រប់ខែ --</option>
-                        <option value="-01-">មករា (01)</option><option value="-02-">កុម្ភៈ (02)</option><option value="-03-">មីនា (03)</option><option value="-04-">មេសា (04)</option><option value="-05-">ឧសភា (05)</option><option value="-06-">មិថុនា (06)</option><option value="-07-">កក្កដា (07)</option><option value="-08-">សីហា (08)</option><option value="-09-">កញ្ញា (09)</option><option value="-10-">តុលា (10)</option><option value="-11-">វិច្ឆិកា (11)</option><option value="-12-">ធ្នូ (12)</option>
-                    </select>
+                    <select id="histFilterMonth" onchange="filterHistoryAdvanced()"><option value="">-- គ្រប់ខែ --</option><option value="-01-">មករា (01)</option><option value="-02-">កុម្ភៈ (02)</option><option value="-03-">មីនា (03)</option><option value="-04-">មេសា (04)</option><option value="-05-">ឧសភា (05)</option><option value="-06-">មិថុនា (06)</option><option value="-07-">កក្កដា (07)</option><option value="-08-">សីហា (08)</option><option value="-09-">កញ្ញា (09)</option><option value="-10-">តុលា (10)</option><option value="-11-">វិច្ឆិកា (11)</option><option value="-12-">ធ្នូ (12)</option></select>
                 </div>
                 <button class="btn btn-reset" onclick="resetHistoryFilter()">បង្ហាញទាំងអស់</button>
-                <button class="btn btn-delete" id="btnDeleteHistory" style="margin-left: auto;" onclick="deleteHistoryFromCloud()">🗑️ លុបទិន្នន័យតាមការជ្រើសរើស</button>
+                <button class="btn btn-delete" id="btnDeleteHistory" style="margin-left: auto;" onclick="deleteHistoryFromCloud()">🗑️ លុបទិន្នន័យជ្រើសរើស</button>
             </div>
             <div class="table-wrapper">
                 <table>
-                    <thead><tr><th>កាលបរិច្ឆេទ (ថ្ងៃ/ខែ/ឆ្នាំ)</th><th>ម៉ោងសិក្សា</th><th>ចំនួនសិស្សវត្តមាន</th><th>ចំនួនសិស្សអវត្តមាន</th><th>សកម្មភាព</th></tr></thead>
+                    <thead><tr><th>កាលបរិច្ឆេទ (ថ្ងៃ/ខែ/ឆ្នាំ)</th><th>ម៉ោងសិក្សា & មុខវិជ្ជា</th><th>សិស្សវត្តមាន</th><th>សិស្សអវត្តមាន</th><th>សកម្មភាព</th></tr></thead>
                     <tbody id="historyTable"></tbody>
                 </table>
             </div>
@@ -222,24 +278,16 @@
             <div class="report-controls">
                 <div class="input-group">
                     <label>ជ្រើសរើសឆ្នាំ៖</label>
-                    <select id="repFilterYear">
-                        <option value="">-- ជ្រើសរើសឆ្នាំ --</option>
-                        <option value="2026">២០២៦</option><option value="2025">២០២៥</option><option value="2024">២០២៤</option>
-                    </select>
+                    <select id="repFilterYear"><option value="">-- ជ្រើសរើសឆ្នាំ --</option><option value="2026">២០២៦</option><option value="2025">២០២៥</option><option value="2024">២០២៤</option></select>
                 </div>
                 <div class="input-group">
                     <label>ជ្រើសរើសខែ៖</label>
-                    <select id="repFilterMonth">
-                        <option value="">-- ពេញមួយឆ្នាំ --</option>
-                        <option value="-01-">មករា (01)</option><option value="-02-">កុម្ភៈ (02)</option><option value="-03-">មីនា (03)</option><option value="-04-">មេសា (04)</option><option value="-05-">ឧសភា (05)</option><option value="-06-">មិថុនា (06)</option><option value="-07-">កក្កដា (07)</option><option value="-08-">សីហា (08)</option><option value="-09-">កញ្ញា (09)</option><option value="-10-">តុលា (10)</option><option value="-11-">វិច្ឆិកា (11)</option><option value="-12-">ធ្នូ (12)</option>
-                    </select>
+                    <select id="repFilterMonth"><option value="">-- ពេញមួយឆ្នាំ --</option><option value="-01-">មករា (01)</option><option value="-02-">កុម្ភៈ (02)</option><option value="-03-">មីនា (03)</option><option value="-04-">មេសា (04)</option><option value="-05-">ឧសភា (05)</option><option value="-06-">មិថុនា (06)</option><option value="-07-">កក្កដា (07)</option><option value="-08-">សីហា (08)</option><option value="-09-">កញ្ញា (09)</option><option value="-10-">តុលា (10)</option><option value="-11-">វិច្ឆិកា (11)</option><option value="-12-">ធ្នូ (12)</option></select>
                 </div>
                 <button class="btn btn-generate" onclick="generateMonthlyReport()">⚙️ បង្កើតរបាយការណ៍</button>
-                
                 <button class="btn btn-export-excel" id="btnExportExcel" onclick="exportToExcel()">📥 ទាញយកជា Excel</button>
-                <button id="btnPrintReport" class="btn btn-print-report" onclick="printMonthlyReport()">🖨️ បោះពុម្ព / ទាញយកជា PDF</button>
+                <button id="btnPrintReport" class="btn btn-print-report" onclick="printMonthlyReport()">🖨️ បោះពុម្ព / ជា PDF</button>
             </div>
-            
             <div class="report-section" id="monthlyReportContainer">
                 <div class="report-header"><h2>របាយការណ៍វត្តមានសិស្ស</h2><h4 id="reportTitleMonth" style="color: #666;"></h4></div>
                 <div class="table-wrapper">
@@ -272,7 +320,21 @@
         const db = firebase.firestore();
 
         let cloudHistoryData = [];
+        let myScheduleData = {}; 
         const khmerMonths = {"-01-":"មករា", "-02-":"កុម្ភៈ", "-03-":"មីនា", "-04-":"មេសា", "-05-":"ឧសភា", "-06-":"មិថុនា", "-07-":"កក្កដា", "-08-":"សីហា", "-09-":"កញ្ញា", "-10-":"តុលា", "-11-":"វិច្ឆិកា", "-12-":"ធ្នូ"};
+
+        // កែសម្រួល Index ដើម្បីចាប់យកមុខវិជ្ជាបានត្រឹមត្រូវ ទោះជារើស ២ ម៉ោងជាប់គ្នាក៏ដោយ
+        const timeSlotMapping = {
+            "៧:០០ - ៨:០០ (ព្រឹក)": 1,
+            "៨:០០ - ៩:០០ (ព្រឹក)": 2,
+            "៧:០០ - ៩:០០ (ព្រឹក) ២ម៉ោង": 1, // ចាប់យកមុខវិជ្ជាម៉ោងទី ១
+            "៩:០០ - ១០:០០ (ព្រឹក)": 3,
+            "១០:០០ - ១១:០០ (ព្រឹក)": 4,
+            "៩:០០ - ១១:០០ (ព្រឹក) ២ម៉ោង": 3, // ចាប់យកមុខវិជ្ជាម៉ោងទី ៣
+            "២:០០ - ៣:០០ (រសៀល)": 5,
+            "៣:០០ - ៤:០០ (រសៀល)": 6,
+            "២:០០ - ៤:០០ (រសៀល) ២ម៉ោង": 5  // ចាប់យកមុខវិជ្ជាម៉ោងរសៀលទី ១
+        };
 
         // ==========================================
         // ២. មុខងារ Authentication
@@ -284,6 +346,7 @@
                 document.getElementById("authOverlay").style.display = "none";
                 document.getElementById("mainApp").style.display = "block";
                 loadHistoryFromCloud(); 
+                loadScheduleFromCloud(); 
             } else {
                 document.getElementById("authOverlay").style.display = "flex";
                 document.getElementById("mainApp").style.display = "none";
@@ -295,34 +358,10 @@
             document.getElementById("loginBox").style.display = isLoginMode ? "block" : "none";
             document.getElementById("registerBox").style.display = isLoginMode ? "none" : "block";
         }
+        function registerUser() { let user = document.getElementById("regUsername").value.trim(); let pass = document.getElementById("regPassword").value.trim(); if (user === "" || pass === "") { alert("សូមបញ្ចូលឈ្មោះគណនី និងពាក្យសម្ងាត់!"); return; } let fakeEmail = user + "@schoolapp.com"; auth.createUserWithEmailAndPassword(fakeEmail, pass).then(() => { alert("បង្កើតគណនីបានជោគជ័យ!"); document.getElementById("regUsername").value = ""; document.getElementById("regPassword").value = ""; }).catch((error) => { alert("បញ្ហា: " + error.message); }); }
+        function loginUser() { let user = document.getElementById("loginUsername").value.trim(); let pass = document.getElementById("loginPassword").value.trim(); if (user === "" || pass === "") { alert("សូមបញ្ចូលឈ្មោះគណនី និងពាក្យសម្ងាត់!"); return; } let fakeEmail = user + "@schoolapp.com"; auth.signInWithEmailAndPassword(fakeEmail, pass).then(() => { document.getElementById("loginUsername").value = ""; document.getElementById("loginPassword").value = ""; }).catch(() => { alert("ឈ្មោះគណនី ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវទេ!"); }); }
+        function logoutUser() { if(confirm("តើអ្នកពិតជាចង់ចាកចេញមែនទេ?")) auth.signOut(); }
 
-        function registerUser() {
-            let user = document.getElementById("regUsername").value.trim();
-            let pass = document.getElementById("regPassword").value.trim();
-            if (user === "" || pass === "") { alert("សូមបញ្ចូលឈ្មោះគណនី និងពាក្យសម្ងាត់!"); return; }
-            let fakeEmail = user + "@schoolapp.com";
-            auth.createUserWithEmailAndPassword(fakeEmail, pass)
-                .then(() => { alert("បង្កើតគណនីបានជោគជ័យ!"); document.getElementById("regUsername").value = ""; document.getElementById("regPassword").value = ""; })
-                .catch((error) => { alert("បញ្ហា: " + error.message); });
-        }
-
-        function loginUser() {
-            let user = document.getElementById("loginUsername").value.trim();
-            let pass = document.getElementById("loginPassword").value.trim();
-            if (user === "" || pass === "") { alert("សូមបញ្ចូលឈ្មោះគណនី និងពាក្យសម្ងាត់!"); return; }
-            let fakeEmail = user + "@schoolapp.com";
-            auth.signInWithEmailAndPassword(fakeEmail, pass)
-                .then(() => { document.getElementById("loginUsername").value = ""; document.getElementById("loginPassword").value = ""; })
-                .catch(() => { alert("ឈ្មោះគណនី ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវទេ!"); });
-        }
-
-        function logoutUser() {
-            if(confirm("តើអ្នកពិតជាចង់ចាកចេញមែនទេ?")) auth.signOut();
-        }
-
-        // ==========================================
-        // ៣. មុខងារបញ្ជា Tab & កត់វត្តមាន
-        // ==========================================
         function openTab(evt, tabName) {
             let tabcontent = document.getElementsByClassName("tab-content");
             for (let i = 0; i < tabcontent.length; i++) tabcontent[i].style.display = "none";
@@ -332,6 +371,72 @@
             evt.currentTarget.className += " active";
         }
 
+        // ==========================================
+        // ៣. កាលវិភាគ (Schedule Logic)
+        // ==========================================
+        function saveScheduleToCloud() {
+            let scheduleToSave = {}; let btn = document.getElementById("btnSaveSchedule"); btn.innerText = "កំពុងរក្សាទុក..."; btn.disabled = true;
+            for(let day = 1; day <= 6; day++) {
+                for(let time = 1; time <= 6; time++) {
+                    let inputId = `sch_${day}_${time}`;
+                    scheduleToSave[inputId] = document.getElementById(inputId).value.trim(); 
+                }
+            }
+            db.collection("settings").doc("schoolSchedule").set(scheduleToSave).then(() => {
+                alert("កាលវិភាគត្រូវបានរក្សាទុកទៅ Cloud ជោគជ័យ!"); myScheduleData = scheduleToSave; autoDetectSubject(); btn.innerText = "💾 រក្សាទុកកាលវិភាគទៅ Cloud"; btn.disabled = false;
+            }).catch((error) => { alert("បញ្ហាក្នុងការរក្សាទុកកាលវិភាគ: " + error.message); btn.innerText = "💾 រក្សាទុកកាលវិភាគទៅ Cloud"; btn.disabled = false; });
+        }
+
+        function loadScheduleFromCloud() {
+            db.collection("settings").doc("schoolSchedule").get().then((doc) => {
+                if (doc.exists) {
+                    myScheduleData = doc.data();
+                    for(let day = 1; day <= 6; day++) {
+                        for(let time = 1; time <= 6; time++) { let inputId = `sch_${day}_${time}`; if(myScheduleData[inputId]) { document.getElementById(inputId).value = myScheduleData[inputId]; } }
+                    }
+                }
+            }).catch((error) => { console.log("Error loading schedule:", error); });
+        }
+
+        function autoDetectSubject() {
+            let dateVal = document.getElementById('date').value; let timeVal = document.getElementById('timeSlot').value; let subjectInput = document.getElementById('currentSubject');
+            if (!dateVal || !timeVal) { subjectInput.value = ""; return; }
+            let d = new Date(dateVal); let dayIndex = d.getDay(); 
+            if (dayIndex === 0) { subjectInput.value = "ថ្ងៃអាទិត្យ (ឈប់សម្រាក)"; return; }
+            let timeIndex = timeSlotMapping[timeVal];
+            if (!timeIndex) { subjectInput.value = "ម៉ោងមិនត្រឹមត្រូវ"; return; }
+            let key = `sch_${dayIndex}_${timeIndex}`; let subject = myScheduleData[key] || "មិនមានមុខវិជ្ជា";
+            subjectInput.value = subject;
+        }
+
+        // ==========================================
+        // ៤. មុខងារគូសវត្តមានទាំងអស់ (Bulk Actions) ថ្មី
+        // ==========================================
+        function markAllStatus(status) {
+            let rows = document.querySelectorAll('#studentTable tr');
+            rows.forEach(row => {
+                // គូសតែសិស្សដែលកំពុងបង្ហាញ (មិនលាក់ដោយសារការ Search)
+                if (row.style.display !== 'none') {
+                    let pBtn = row.querySelector('.btn-present');
+                    let aBtn = row.querySelector('.btn-absent');
+                    
+                    // លុបពណ៌ចាស់ចោលសិន
+                    pBtn.classList.remove('active-present');
+                    aBtn.classList.remove('active-absent');
+                    
+                    // ដាក់ពណ៌ថ្មីតាមការចុច
+                    if (status === 'present') {
+                        pBtn.classList.add('active-present');
+                    } else if (status === 'absent') {
+                        aBtn.classList.add('active-absent');
+                    }
+                }
+            });
+        }
+
+        // ==========================================
+        // ៥. មុខងារសិស្ស និង Save (Cloud)
+        // ==========================================
         let studentCount = 2; let editingRow = null; 
         function formatDateToKhmer(dateStr) { if (!dateStr || dateStr === "មិនបានបញ្ជាក់") return dateStr; let parts = dateStr.split('-'); if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`; return dateStr; }
         function parseDateFromKhmer(dateStr) { if (!dateStr || dateStr === "មិនបានបញ្ជាក់") return ""; let parts = dateStr.split('/'); if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`; return dateStr; }
@@ -354,18 +459,17 @@
             }
             document.getElementById("newStuId").value = ""; document.getElementById("newStuName").value = ""; document.getElementById("newStuDob").value = ""; document.getElementById("newStuGrade").value = "";
         }
-
         function editStudent(button) { let row = button.closest("tr"); document.getElementById("newStuId").value = row.querySelector(".stu-id").innerText; document.getElementById("newStuName").value = row.querySelector(".stu-name").innerText; document.getElementById("newStuGender").value = row.querySelector(".stu-gender").innerText; document.getElementById("newStuDob").value = parseDateFromKhmer(row.querySelector(".stu-dob").innerText); document.getElementById("newStuGrade").value = (row.querySelector(".stu-grade").innerText === "មិនបានបញ្ជាក់") ? "" : row.querySelector(".stu-grade").innerText; editingRow = row; let btn = document.getElementById("btnAddUpdate"); btn.innerText = "✓ រក្សាទុកការកែប្រែ"; btn.classList.replace("btn-add", "btn-update"); }
         function deleteStudent(button) { if(confirm("តើអ្នកពិតជាចង់លុបសិស្សនេះចេញពីបញ្ជីមែនទេ?")) { button.closest("tr").remove(); updateIndex(); } }
         function updateIndex() { let rows = document.querySelectorAll("#studentTable tr"); studentCount = 0; rows.forEach((row, index) => { studentCount = index + 1; row.querySelector(".stu-index").innerText = studentCount; }); }
         function searchStudent() { let input = document.getElementById("searchInput").value.toLowerCase(); let rows = document.querySelectorAll("#studentTable tr"); rows.forEach(row => { let id = row.querySelector(".stu-id").innerText.toLowerCase(); let name = row.querySelector(".stu-name").innerText.toLowerCase(); if (id.includes(input) || name.includes(input)) row.style.display = ""; else row.style.display = "none"; }); }
         function markStatus(button, status) { let row = button.closest("tr"); let pBtn = row.querySelector('.btn-present'); let aBtn = row.querySelector('.btn-absent'); pBtn.classList.remove('active-present'); aBtn.classList.remove('active-absent'); if (status === 'present') pBtn.classList.add('active-present'); else if (status === 'absent') aBtn.classList.add('active-absent'); }
 
-        // ==========================================
-        // ៤. មុខងារ Save / Load / Delete ជាមួយ Cloud
-        // ==========================================
         function saveData() {
-            const rawDate = document.getElementById('date').value; const timeSlot = document.getElementById('timeSlot').value; 
+            const rawDate = document.getElementById('date').value; 
+            const timeSlot = document.getElementById('timeSlot').value; 
+            const subject = document.getElementById('currentSubject').value; 
+
             if (!rawDate) { alert("សូមជ្រើសរើសកាលបរិច្ឆេទជាមុនសិន!"); return; }
             if (!timeSlot) { alert("សូមជ្រើសរើសម៉ោងសិក្សាជាមុនសិន!"); return; }
 
@@ -385,6 +489,7 @@
             db.collection("attendanceHistory").add({
                 date: rawDate,
                 time: timeSlot,
+                subject: subject, 
                 totalPresent: totalPresent,
                 totalAbsent: totalAbsent,
                 absentNames: absentNames,
@@ -403,13 +508,14 @@
 
         function resetFormButtons(rows) { rows.forEach(row => { let pBtn = row.querySelector('.btn-present'); let aBtn = row.querySelector('.btn-absent'); if(pBtn) pBtn.classList.remove('active-present'); if(aBtn) aBtn.classList.remove('active-absent'); }); document.querySelector('.btn-save').innerText = "💾 រក្សាទុកទិន្នន័យអវត្តមាន"; }
 
+        // ==========================================
+        // ៦. ប្រវត្តិ និង របាយការណ៍
+        // ==========================================
         function loadHistoryFromCloud() {
             db.collection("attendanceHistory").orderBy("date", "desc").get().then((querySnapshot) => {
                 cloudHistoryData = []; 
                 querySnapshot.forEach((doc) => { 
-                    let data = doc.data();
-                    data.docId = doc.id; 
-                    cloudHistoryData.push(data); 
+                    let data = doc.data(); data.docId = doc.id; cloudHistoryData.push(data); 
                 });
                 filterHistoryAdvanced(); 
             }).catch((error) => { console.log("Error: ", error); });
@@ -422,7 +528,15 @@
             dataArray.forEach(record => {
                 let namesString = record.absentNames.length > 0 ? record.absentNames.join(', ') : 'គ្មាន';
                 let displayDate = formatDateToKhmer(record.date);
-                let row = `<tr><td>${displayDate}</td><td style="color: #00d2ff;">${record.time}</td><td style="color: #17c964; font-weight: bold;">${record.totalPresent}</td><td style="color: #f31260; font-weight: bold;">${record.totalAbsent}</td><td><button class="btn btn-view" onclick="viewDetails('${record.date}', '${record.time}', '${namesString}')">មើលលម្អិត</button></td></tr>`;
+                let displaySubject = record.subject ? record.subject : "មិនមានបញ្ជាក់"; 
+                
+                let row = `<tr>
+                    <td>${displayDate}</td>
+                    <td style="color: #00d2ff;">${record.time}<br><span style="color:#17c964; font-size:12px;">(${displaySubject})</span></td>
+                    <td style="color: #17c964; font-weight: bold;">${record.totalPresent}</td>
+                    <td style="color: #f31260; font-weight: bold;">${record.totalAbsent}</td>
+                    <td><button class="btn btn-view" onclick="viewDetails('${displayDate}', '${record.time}', '${displaySubject}', '${namesString}')">មើលលម្អិត</button></td>
+                </tr>`;
                 tableBody.innerHTML += row;
             });
         }
@@ -436,111 +550,51 @@
         }
 
         function resetHistoryFilter() { document.getElementById("histFilterYear").value = ""; document.getElementById("histFilterMonth").value = ""; renderHistoryTable(cloudHistoryData); }
-        function viewDetails(date, time, namesString) { let displayDate = formatDateToKhmer(date); alert(`📅 កាលបរិច្ឆេទ: ${displayDate}\n⏰ ម៉ោង: ${time}\n\nសិស្សអវត្តមាន:\n👉 ${namesString}`); }
+        function viewDetails(date, time, subject, namesString) { alert(`📅 ថ្ងៃទី: ${date}\n⏰ ម៉ោង: ${time}\n📚 មុខវិជ្ជា: ${subject}\n\n👉 សិស្សអវត្តមាន:\n${namesString}`); }
 
         function deleteHistoryFromCloud() {
             let year = document.getElementById("histFilterYear").value; let month = document.getElementById("histFilterMonth").value;
-            let confirmMsg = "តើអ្នកពិតជាចង់លុបទិន្នន័យប្រវត្តិទាំងអស់មែនទេ? (ទិន្នន័យលុបចេញពី Cloud មិនអាចទាញមកវិញបានទេ)";
-            if (year !== "" && month !== "") { confirmMsg = `តើអ្នកពិតជាចង់លុបទិន្នន័យសម្រាប់ ខែ${khmerMonths[month]} ឆ្នាំ${year} ចេញពី Cloud មែនទេ?`; } 
-            else if (year !== "") { confirmMsg = `តើអ្នកពិតជាចង់លុបទិន្នន័យសម្រាប់ ឆ្នាំ${year} ទាំងអស់ចេញពី Cloud មែនទេ?`; } 
-            else if (month !== "") { confirmMsg = `តើអ្នកពិតជាចង់លុបទិន្នន័យសម្រាប់ ខែ${khmerMonths[month]} (គ្រប់ឆ្នាំ) ចេញពី Cloud មែនទេ?`; }
+            let confirmMsg = "តើអ្នកពិតជាចង់លុបទិន្នន័យប្រវត្តិទាំងអស់មែនទេ?";
+            if (year !== "" && month !== "") { confirmMsg = `តើអ្នកពិតជាចង់លុបទិន្នន័យសម្រាប់ ខែ${khmerMonths[month]} ឆ្នាំ${year} មែនទេ?`; } 
+            else if (year !== "") { confirmMsg = `តើអ្នកពិតជាចង់លុបទិន្នន័យសម្រាប់ ឆ្នាំ${year} ទាំងអស់មែនទេ?`; } 
+            else if (month !== "") { confirmMsg = `តើអ្នកពិតជាចង់លុបទិន្នន័យសម្រាប់ ខែ${khmerMonths[month]} (គ្រប់ឆ្នាំ) មែនទេ?`; }
 
             if(confirm(confirmMsg)) {
                 let btn = document.getElementById("btnDeleteHistory"); let originalText = btn.innerText; btn.innerText = "កំពុងលុប..."; btn.disabled = true;
                 let docsToDelete = cloudHistoryData;
                 if (year !== "") docsToDelete = docsToDelete.filter(record => record.date.startsWith(year));
                 if (month !== "") docsToDelete = docsToDelete.filter(record => record.date.includes(month));
-                if (docsToDelete.length === 0) { alert("មិនមានទិន្នន័យសម្រាប់លុបតាមការជ្រើសរើសរបស់អ្នកទេ!"); btn.innerText = originalText; btn.disabled = false; return; }
+                if (docsToDelete.length === 0) { alert("មិនមានទិន្នន័យសម្រាប់លុបទេ!"); btn.innerText = originalText; btn.disabled = false; return; }
 
                 let deletePromises = [];
                 docsToDelete.forEach(record => { if(record.docId) { let promise = db.collection("attendanceHistory").doc(record.docId).delete(); deletePromises.push(promise); } });
-
-                Promise.all(deletePromises).then(() => {
-                    alert(`បានលុបទិន្នន័យចំនួន ${deletePromises.length} កំណត់ត្រាដោយជោគជ័យ!`);
-                    loadHistoryFromCloud(); btn.innerText = originalText; btn.disabled = false;
-                }).catch((error) => { alert("មានបញ្ហាក្នុងការលុប: " + error.message); btn.innerText = originalText; btn.disabled = false; });
+                Promise.all(deletePromises).then(() => { alert(`លុបទិន្នន័យជោគជ័យ!`); loadHistoryFromCloud(); btn.innerText = originalText; btn.disabled = false; }).catch((error) => { alert("បញ្ហា: " + error.message); btn.innerText = originalText; btn.disabled = false; });
             }
         }
 
-        // ==========================================
-        // ៥. របាយការណ៍ និង ទាញយក EXCEL ថ្មី
-        // ==========================================
         function generateMonthlyReport() {
             let year = document.getElementById('repFilterYear').value; let month = document.getElementById('repFilterMonth').value; 
-            if (year === "" && month === "") { alert("សូមជ្រើសរើសឆ្នាំ ឬខែណាមួយ ដើម្បីបង្កើតរបាយការណ៍!"); return; }
-
+            if (year === "" && month === "") { alert("សូមជ្រើសរើសឆ្នាំ ឬខែណាមួយ!"); return; }
             let filteredHistory = cloudHistoryData;
             if (year !== "") filteredHistory = filteredHistory.filter(h => h.date.startsWith(year));
             if (month !== "") filteredHistory = filteredHistory.filter(h => h.date.includes(month));
-
-            if (filteredHistory.length === 0) {
-                alert("មិនមានទិន្នន័យអវត្តមានដែលបានរក្សាទុក ក្នុងកំលុងពេលនេះទេ!");
-                document.getElementById('monthlyReportContainer').style.display = 'none';
-                document.getElementById('btnPrintReport').style.display = 'none';
-                document.getElementById('btnExportExcel').style.display = 'none';
-                return;
-            }
+            if (filteredHistory.length === 0) { alert("មិនមានទិន្នន័យអវត្តមានក្នុងកំលុងពេលនេះទេ!"); document.getElementById('monthlyReportContainer').style.display = 'none'; document.getElementById('btnPrintReport').style.display = 'none'; document.getElementById('btnExportExcel').style.display = 'none'; return; }
 
             let totalSessionsInMonth = filteredHistory.length; 
-            let studentRows = document.querySelectorAll('#studentTable tr');
-            let studentsData = [];
-            
-            studentRows.forEach(row => {
-                let id = row.querySelector('.stu-id').innerText; let name = row.querySelector('.stu-name').innerText;
-                let gender = row.querySelector('.stu-gender').innerText; let grade = row.querySelector('.stu-grade').innerText;
-                studentsData.push({ id: id, name: name, gender: gender, grade: grade, presentCount: 0, absentCount: 0 });
-            });
+            let studentRows = document.querySelectorAll('#studentTable tr'); let studentsData = [];
+            studentRows.forEach(row => { let id = row.querySelector('.stu-id').innerText; let name = row.querySelector('.stu-name').innerText; let gender = row.querySelector('.stu-gender').innerText; let grade = row.querySelector('.stu-grade').innerText; studentsData.push({ id: id, name: name, gender: gender, grade: grade, presentCount: 0, absentCount: 0 }); });
 
-            studentsData.forEach(student => {
-                filteredHistory.forEach(session => {
-                    if (session.absentNames && session.absentNames.includes(student.name)) student.absentCount++;
-                    else student.presentCount++;
-                });
-            });
+            studentsData.forEach(student => { filteredHistory.forEach(session => { if (session.absentNames && session.absentNames.includes(student.name)) student.absentCount++; else student.presentCount++; }); });
 
             let tbody = document.getElementById('monthlyReportBody'); tbody.innerHTML = "";
-            studentsData.forEach((student, index) => {
-                let row = `<tr><td>${index + 1}</td><td>${student.id}</td><td style="text-align: left; font-weight: bold;">${student.name}</td><td>${student.gender}</td><td>${student.grade}</td><td style="color: #17c964; font-weight: bold; font-size: 16px;">${student.presentCount}</td><td style="color: #f31260; font-weight: bold; font-size: 16px;">${student.absentCount}</td><td style="color: #00d2ff; font-weight: bold;">${totalSessionsInMonth}</td></tr>`;
-                tbody.innerHTML += row;
-            });
+            studentsData.forEach((student, index) => { let row = `<tr><td>${index + 1}</td><td>${student.id}</td><td style="text-align: left; font-weight: bold;">${student.name}</td><td>${student.gender}</td><td>${student.grade}</td><td style="color: #17c964; font-weight: bold; font-size: 16px;">${student.presentCount}</td><td style="color: #f31260; font-weight: bold; font-size: 16px;">${student.absentCount}</td><td style="color: #00d2ff; font-weight: bold;">${totalSessionsInMonth}</td></tr>`; tbody.innerHTML += row; });
 
             let titleText = "";
-            if (year !== "" && month !== "") { titleText = `ប្រចាំខែ ${khmerMonths[month]} ឆ្នាំ ${year}`; } 
-            else if (year !== "") { titleText = `ប្រចាំឆ្នាំ ${year} ពេញមួយឆ្នាំ`; } 
-            else if (month !== "") { titleText = `ប្រចាំខែ ${khmerMonths[month]} (សរុបគ្រប់ឆ្នាំ)`; }
-
-            document.getElementById('reportTitleMonth').innerText = titleText;
-            document.getElementById('monthlyReportContainer').style.display = 'block';
-            document.getElementById('btnPrintReport').style.display = 'inline-flex'; 
-            document.getElementById('btnExportExcel').style.display = 'inline-flex'; 
+            if (year !== "" && month !== "") { titleText = `ប្រចាំខែ ${khmerMonths[month]} ឆ្នាំ ${year}`; } else if (year !== "") { titleText = `ប្រចាំឆ្នាំ ${year} ពេញមួយឆ្នាំ`; } else if (month !== "") { titleText = `ប្រចាំខែ ${khmerMonths[month]} (សរុបគ្រប់ឆ្នាំ)`; }
+            document.getElementById('reportTitleMonth').innerText = titleText; document.getElementById('monthlyReportContainer').style.display = 'block'; document.getElementById('btnPrintReport').style.display = 'inline-flex'; document.getElementById('btnExportExcel').style.display = 'inline-flex'; 
         }
 
-        // មុខងារទាញយក Excel ដែលបានអាប់ដេតដើម្បីកំណត់ទំហំ Column
-        function exportToExcel() {
-            let table = document.getElementById("reportTableForExcel");
-            let titleText = document.getElementById("reportTitleMonth").innerText;
-            
-            let ws = XLSX.utils.table_to_sheet(table);
-            
-            // កំណត់ប្រវែង (Width) នៃកូឡោននីមួយៗឲ្យមើលទៅស្អាតមិនញាត់គ្នា
-            ws['!cols'] = [
-                { wch: 6 },   // ល.រ
-                { wch: 15 },  // អត្តលេខ
-                { wch: 30 },  // ឈ្មោះសិស្ស (កំណត់ឲ្យវែងជាងគេ)
-                { wch: 10 },  // ភេទ
-                { wch: 12 },  // ថ្នាក់ទី
-                { wch: 15 },  // វត្តមានសរុប
-                { wch: 15 },  // អវត្តមានសរុប
-                { wch: 18 }   // សរុបម៉ោងសិក្សា
-            ];
-            
-            let wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "របាយការណ៍សិស្ស");
-            
-            let fileName = "របាយការណ៍អវត្តមាន_" + titleText.replace(/[\/\s]/g, "_") + ".xlsx";
-            XLSX.writeFile(wb, fileName);
-        }
-
+        function exportToExcel() { let table = document.getElementById("reportTableForExcel"); let titleText = document.getElementById("reportTitleMonth").innerText; let ws = XLSX.utils.table_to_sheet(table); ws['!cols'] = [ { wch: 6 }, { wch: 15 }, { wch: 30 }, { wch: 10 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 18 } ]; let wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "របាយការណ៍សិស្ស"); let fileName = "របាយការណ៍អវត្តមាន_" + titleText.replace(/[\/\s]/g, "_") + ".xlsx"; XLSX.writeFile(wb, fileName); }
         function printDailyReport() { document.body.classList.add('print-daily'); window.print(); setTimeout(() => { document.body.classList.remove('print-daily'); }, 1000); }
         function printMonthlyReport() { document.body.classList.add('print-monthly'); window.print(); setTimeout(() => { document.body.classList.remove('print-monthly'); }, 1000); }
     </script>
