@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#121212">
+    <meta name="theme-color" content="#121212" id="themeColorMeta">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>ប្រព័ន្ធគ្រប់គ្រងអវត្តមានសិស្ស</title>
@@ -14,69 +14,100 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
+        /* ប្រព័ន្ធពណ៌ (Light/Dark Mode) */
+        :root {
+            --bg-main: #121212;
+            --bg-box: #1e1e24;
+            --bg-content: #16161a;
+            --text-main: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --border-color: #2d2d35;
+            --input-bg: #2a2a32;
+            --table-th: #16161a;
+            --highlight: #00d2ff;
+        }
+
+        body.light-mode {
+            --bg-main: #f0f2f5;
+            --bg-box: #ffffff;
+            --bg-content: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --border-color: #d1d5db;
+            --input-bg: #f9fafb;
+            --table-th: #e5e7eb;
+            --highlight: #0070f3;
+        }
+
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Khmer OS Battambang', sans-serif; background-color: #121212; color: #e0e0e0; -webkit-font-smoothing: antialiased; }
-        h2, h3 { text-align: center; color: #ffffff; margin: 20px 0 25px 0; font-weight: 600; }
+        body { font-family: 'Khmer OS Battambang', sans-serif; background-color: var(--bg-main); color: var(--text-main); -webkit-font-smoothing: antialiased; transition: background-color 0.3s, color 0.3s; }
+        h2, h3 { text-align: center; margin: 20px 0 25px 0; font-weight: 600; }
         
-        .auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #121212; display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .auth-box { background-color: #1e1e24; padding: 30px 25px; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid #2d2d35; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
-        .auth-box h2 { margin-top: 0; color: #00d2ff; }
-        .auth-box p { color: #a0a0a0; font-size: 14px; margin-bottom: 20px; }
-        .auth-input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 6px; background-color: #2a2a32; color: #fff; border: 1px solid #40404a; font-family: inherit; font-size: 15px; }
-        .auth-input:focus { outline: none; border-color: #00d2ff; }
+        .auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-main); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .auth-box { background-color: var(--bg-box); padding: 30px 25px; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; }
+        .auth-box h2 { margin-top: 0; color: var(--highlight); }
+        .auth-box p { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; }
+        .auth-input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 6px; background-color: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); font-family: inherit; font-size: 15px; }
+        .auth-input:focus { outline: none; border-color: var(--highlight); }
         .auth-btn { width: 100%; padding: 12px; border-radius: 6px; border: none; font-family: inherit; background-color: #006fee; color: white; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .auth-btn:hover { background-color: #005bc4; }
-        .auth-switch { margin-top: 15px; color: #a0a0a0; font-size: 14px; cursor: pointer; }
-        .auth-switch span { color: #00d2ff; text-decoration: underline; }
+        .auth-switch { margin-top: 15px; color: var(--text-muted); font-size: 14px; cursor: pointer; }
+        .auth-switch span { color: var(--highlight); text-decoration: underline; }
 
         #mainApp { display: none; padding: 15px; max-width: 1400px; margin: 0 auto; }
+        
         .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;}
         .header-bar h2 { margin: 0; }
+        .header-actions { display: flex; gap: 10px; align-items: center;}
+        .btn-theme { background: transparent; border: 2px solid var(--border-color); color: var(--text-main); font-size: 18px; cursor: pointer; border-radius: 50%; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; transition: 0.3s;}
+        .btn-theme:hover { border-color: var(--highlight); }
         .btn-logout { background-color: #f31260; color: white; padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; font-family: inherit; font-weight: bold; font-size: 14px;}
         
-        .tab-container { background-color: #1e1e24; border-radius: 10px 10px 0 0; display: flex; border-bottom: 2px solid #2d2d35; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        .tab-btn { background-color: transparent; color: #a0a0a0; border: none; outline: none; cursor: pointer; padding: 15px 15px; transition: all 0.3s ease; font-size: 14px; font-family: inherit; flex: 1; font-weight: bold; white-space: nowrap; text-align: center;}
-        .tab-btn:hover { color: #ffffff; background-color: rgba(255,255,255,0.05); }
-        .tab-btn.active { color: #00d2ff; border-bottom: 3px solid #00d2ff; background-color: rgba(0, 210, 255, 0.05); }
+        .tab-container { background-color: var(--bg-box); border-radius: 10px 10px 0 0; display: flex; border-bottom: 2px solid var(--border-color); overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .tab-btn { background-color: transparent; color: var(--text-muted); border: none; outline: none; cursor: pointer; padding: 15px; transition: all 0.3s ease; font-size: 14px; font-family: inherit; flex: 1; font-weight: bold; white-space: nowrap; text-align: center;}
+        .tab-btn:hover { color: var(--highlight); }
+        .tab-btn.active { color: var(--highlight); border-bottom: 3px solid var(--highlight); background-color: rgba(0, 112, 243, 0.05); }
         
-        .tab-content { display: none; padding: 25px 20px; background-color: #16161a; border-radius: 0 0 10px 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); animation: fadeIn 0.4s ease-in-out; }
+        .tab-content { display: none; padding: 25px 20px; background-color: var(--bg-content); border-radius: 0 0 10px 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); animation: fadeIn 0.4s ease-in-out; }
         @keyframes fadeIn { from {opacity: 0; transform: translateY(5px);} to {opacity: 1; transform: translateY(0);} }
 
-        .controls-container, .add-student-container, .report-controls, .filter-history { display: flex; justify-content: flex-start; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; background-color: #1e1e24; padding: 20px; border-radius: 10px; border: 1px solid #2d2d35; }
+        .controls-container, .add-student-container, .report-controls, .filter-history { display: flex; justify-content: flex-start; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; background-color: var(--bg-box); padding: 20px; border-radius: 10px; border: 1px solid var(--border-color); }
         .input-group { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 150px; }
-        .input-group label { font-size: 13px; color: #b0b0b0; font-weight: bold; }
+        .input-group label { font-size: 13px; color: var(--text-muted); font-weight: bold; }
 
-        input[type="date"], input[type="text"], select, input[type="file"] { background-color: #2a2a32; color: #ffffff; border: 1px solid #40404a; padding: 10px 12px; border-radius: 6px; font-family: inherit; width: 100%; font-size: 14px; }
-        input:focus, select:focus { outline: none; border-color: #00d2ff; }
+        input[type="date"], input[type="text"], select, input[type="file"] { background-color: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); padding: 10px 12px; border-radius: 6px; font-family: inherit; width: 100%; font-size: 14px; }
+        input:focus, select:focus { outline: none; border-color: var(--highlight); }
 
-        .bulk-actions { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; background-color: #1e1e24; padding: 10px 15px; border-radius: 8px; border: 1px dashed #444; align-items: center; justify-content: space-between;}
-        .bulk-actions span { color: #a0a0a0; font-size: 13px; margin-right: 5px; }
+        .bulk-actions { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; background-color: var(--bg-box); padding: 10px 15px; border-radius: 8px; border: 1px dashed var(--border-color); align-items: center; justify-content: space-between;}
+        .bulk-actions span { color: var(--text-muted); font-size: 13px; margin-right: 5px; }
 
-        .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; border: 1px solid #2d2d35; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; background-color: #1e1e24; min-width: 800px; }
-        th, td { padding: 14px 12px; border-bottom: 1px solid #2d2d35; text-align: center; font-size: 14px; }
-        th { background-color: #16161a; color: #a0a0a0; white-space: nowrap; font-weight: bold; font-size: 12px; }
+        .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; background-color: var(--bg-box); min-width: 800px; }
+        th, td { padding: 12px; border-bottom: 1px solid var(--border-color); text-align: center; font-size: 14px; }
+        th { background-color: var(--table-th); color: var(--text-muted); white-space: nowrap; font-weight: bold; font-size: 13px; }
 
-        .schedule-table input { width: 100%; min-width: 100px; text-align: center; border: 1px solid #444; background: #222; }
-        .schedule-table input:focus { border-color: #17c964; background: #111; }
+        .schedule-table input { width: 100%; min-width: 100px; text-align: center; border: 1px solid var(--border-color); background: var(--input-bg); }
+        .schedule-table input:focus { border-color: #17c964; }
         .schedule-table th { background-color: #004466; color: white; border: 1px solid #005580; }
-        .schedule-table td { border: 1px solid #333; padding: 5px; }
+        .schedule-table td { border: 1px solid var(--border-color); padding: 5px; }
 
         .btn { padding: 10px 18px; border: none; cursor: pointer; border-radius: 6px; font-family: inherit; transition: all 0.2s; font-weight: bold; font-size: 14px; display: inline-flex; justify-content: center; align-items: center;}
         .btn:active { transform: scale(0.97); }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         
         .status-btns { display: flex; gap: 5px; justify-content: center; }
-        .btn-present, .btn-absent { background-color: #2a2a32; color: #a0a0a0; border: 1px solid #40404a; padding: 8px 12px; font-size: 13px; border-radius: 5px; flex: 1; }
-        .active-present { background-color: #17c964 !important; color: #000000 !important; border-color: #17c964 !important; }
-        .active-absent { background-color: #f31260 !important; color: #ffffff !important; border-color: #f31260 !important; }
+        .btn-present, .btn-excused, .btn-unexcused { background-color: var(--input-bg); color: var(--text-muted); border: 1px solid var(--border-color); padding: 8px 12px; font-size: 13px; border-radius: 5px; flex: 1; }
+        
+        .active-present { background-color: #17c964 !important; color: #000 !important; border-color: #17c964 !important; }
+        .active-excused { background-color: #f5a524 !important; color: #000 !important; border-color: #f5a524 !important; }
+        .active-unexcused { background-color: #f31260 !important; color: #fff !important; border-color: #f31260 !important; }
 
         .action-btns { display: flex; gap: 5px; justify-content: center; }
         .btn-edit { background-color: #f5a524; color: #000; padding: 6px 10px; font-size: 12px; }
         .btn-delete { background-color: #f31260; color: #fff; padding: 6px 10px; font-size: 12px; }
 
         .btn-group { display: flex; gap: 15px; margin-top: 25px; flex-wrap: wrap; }
-        .btn-save { background-color: #ffffff; color: #000000; padding: 14px 20px; font-size: 16px; flex: 1; min-width: 250px; }
+        .btn-save { background-color: var(--text-main); color: var(--bg-main); padding: 14px 20px; font-size: 16px; flex: 1; min-width: 250px; border: 1px solid var(--text-main);}
         .btn-add, .btn-generate { background-color: #17c964; color: #000; height: 40px; }
         .btn-update { background-color: #f5a524; color: #000; height: 40px; }
         .btn-view { background-color: #006fee; color: white; padding: 6px 12px; font-size: 12px; }
@@ -86,8 +117,8 @@
 
         .report-section { display: none; margin-top: 30px; } 
         .report-header { text-align: center; display: none; margin-bottom: 20px; }
-        .footer-credit { text-align: center; margin-top: 40px; padding: 20px 0; color: #666; font-size: 14px; border-top: 1px solid #2d2d35; }
-        .footer-credit strong { color: #00d2ff; }
+        .footer-credit { text-align: center; margin-top: 40px; padding: 20px 0; color: var(--text-muted); font-size: 14px; border-top: 1px solid var(--border-color); }
+        .footer-credit strong { color: var(--highlight); }
 
         @media screen and (max-width: 768px) {
             #mainApp { padding: 10px; }
@@ -97,15 +128,15 @@
             .input-group { min-width: 100%; width: 100%; }
             .btn-add, .btn-update, .btn-reset, .btn-generate, .btn-print-report, .btn-export-excel, .btn-delete { width: 100%; margin-top: 10px; }
             .btn-group { flex-direction: column; } 
-            th, td { padding: 10px 8px; font-size: 13px; }
-            .status-btns, .action-btns { flex-direction: column; gap: 4px; }
+            th, td { padding: 10px 5px; font-size: 12px; }
+            .status-btns { flex-direction: column; gap: 4px; }
             .bulk-actions { flex-direction: column; align-items: stretch; text-align: center; }
             .bulk-actions .btn { width: 100%; margin-top: 5px; }
         }
 
         @media print {
             body { background-color: #ffffff !important; color: #000000 !important; margin: 0; padding: 0; max-width: 100%; }
-            .tab-container, input:not([readonly]), select, button, .add-student-container, .controls-container, .report-controls, .filter-history, .footer-credit, .header-bar .btn-logout, .bulk-actions { display: none !important; }
+            .tab-container, input:not([readonly]), select, button, .add-student-container, .controls-container, .report-controls, .filter-history, .footer-credit, .header-bar .btn-logout, .header-bar .btn-theme, .bulk-actions { display: none !important; }
             .tab-content { border: none !important; padding: 0 !important; display: block !important; background: transparent !important; box-shadow: none !important; }
             .table-wrapper { border: none !important; overflow: visible !important; margin-bottom: 20px; }
             table { width: 100%; border-collapse: collapse; min-width: 100%; }
@@ -113,9 +144,8 @@
             th { background-color: #f2f2f2 !important; color: #000000 !important; }
             body.print-daily #TabHistory, body.print-daily #TabReport, body.print-daily #TabSchedule, body.print-daily #TabManageStudents { display: none !important; }
             body.print-daily #TabAttendance { display: block !important; }
-            body.print-daily th:nth-child(8), body.print-daily td:nth-child(8) { display: none !important; } 
-            body.print-daily .btn-present:not(.active-present), body.print-daily .btn-absent:not(.active-absent) { display: none !important; }
-            body.print-daily .active-present, body.print-daily .active-absent { display: block !important; border: none; background: transparent !important; color: #000 !important; padding: 0; font-weight: bold; }
+            body.print-daily .btn-present:not(.active-present), body.print-daily .btn-excused:not(.active-excused), body.print-daily .btn-unexcused:not(.active-unexcused) { display: none !important; }
+            body.print-daily .active-present, body.print-daily .active-excused, body.print-daily .active-unexcused { display: block !important; border: none; background: transparent !important; color: #000 !important; padding: 0; font-weight: bold; }
             body.print-monthly #TabAttendance, body.print-monthly #TabHistory, body.print-monthly #TabSchedule, body.print-monthly #TabManageStudents { display: none !important; }
             body.print-monthly #TabReport { display: block !important; }
             body.print-monthly .report-section { display: block !important; }
@@ -147,7 +177,10 @@
     <div id="mainApp">
         <div class="header-bar">
             <h2>ប្រព័ន្ធគ្រប់គ្រងអវត្តមានសិស្ស</h2>
-            <button class="btn-logout" onclick="logoutUser()">🚪 ចាកចេញ</button>
+            <div class="header-actions">
+                <button class="btn-theme" onclick="toggleTheme()" id="themeBtn" title="ប្តូរពណ៌ផ្ទៃ (ស/ខ្មៅ)">🌞</button>
+                <button class="btn-logout" onclick="logoutUser()">🚪 ចាកចេញ</button>
+            </div>
         </div>
 
         <div class="tab-container">
@@ -174,8 +207,8 @@
                     </select>
                 </div>
                 <div class="input-group" style="flex: 1.5;">
-                    <label style="color:#00d2ff;">មុខវិជ្ជា (ចាប់ស្វ័យប្រវត្តិ)៖</label>
-                    <input type="text" id="currentSubject" readonly style="background-color: #111; color: #17c964; font-weight: bold; border-color:#00d2ff;" placeholder="សូមជ្រើសរើសថ្ងៃ និងម៉ោងសិន...">
+                    <label style="color:var(--highlight);">មុខវិជ្ជា (ចាប់ស្វ័យប្រវត្តិ)៖</label>
+                    <input type="text" id="currentSubject" readonly style="color: #17c964; font-weight: bold; border-color:var(--highlight);" placeholder="សូមជ្រើសរើសថ្ងៃ និងម៉ោងសិន...">
                 </div>
                 <div class="input-group search-box" style="flex: 1.5;">
                     <label>ស្វែងរកសិស្ស</label>
@@ -186,13 +219,14 @@
             <div class="bulk-actions" style="justify-content: flex-start;">
                 <span>គូសក្នុងពេលតែមួយ៖</span>
                 <button class="btn btn-bulk-p" style="background-color: #17c964; color: #000;" onclick="markAllStatus('present')">✓ វត្តមានទាំងអស់</button>
-                <button class="btn btn-bulk-a" style="background-color: #f31260; color: #fff;" onclick="markAllStatus('absent')">✗ អវត្តមានទាំងអស់</button>
-                <button class="btn btn-bulk-c" style="background-color: #3f3f46; color: #fff; margin-left: auto;" onclick="markAllStatus('clear')">🧹 លុបការជ្រើសរើស</button>
+                <button class="btn btn-bulk-e" style="background-color: #f5a524; color: #000;" onclick="markAllStatus('excused')">📄 ច្បាប់ទាំងអស់</button>
+                <button class="btn btn-bulk-a" style="background-color: #f31260; color: #fff;" onclick="markAllStatus('unexcused')">✗ អត់ច្បាប់ទាំងអស់</button>
+                <button class="btn btn-bulk-c" style="background-color: #3f3f46; color: #fff; margin-left: auto;" onclick="markAllStatus('clear')">🧹 លុប</button>
             </div>
 
             <div class="table-wrapper">
                 <table id="attendanceTable">
-                    <thead><tr><th style="width: 5%;">ល.រ</th><th style="width: 15%;">អត្តលេខ</th><th style="width: 40%; text-align: left;">ឈ្មោះសិស្ស</th><th style="width: 10%;">ភេទ</th><th style="width: 30%;">ស្ថានភាពវត្តមាន</th></tr></thead>
+                    <thead><tr><th style="width: 5%;">ល.រ</th><th style="width: 15%;">អត្តលេខ</th><th style="width: 30%; text-align: left;">ឈ្មោះសិស្ស</th><th style="width: 10%;">ភេទ</th><th style="width: 40%;">ស្ថានភាពវត្តមាន</th></tr></thead>
                     <tbody id="attendanceStudentTableBody"></tbody>
                 </table>
             </div>
@@ -207,13 +241,19 @@
                 <div class="input-group" style="flex: 0 0 100%; margin-bottom: 5px;"><label style="color: #17c964; font-size: 15px;">+ បញ្ចូលសិស្សថ្មីចូលក្នុងប្រព័ន្ធ</label></div>
                 <div class="input-group"><label>អត្តលេខ</label><input type="text" id="newStuId" placeholder="ឧ. S004"></div>
                 <div class="input-group"><label>ឈ្មោះសិស្ស</label><input type="text" id="newStuName" placeholder="ឈ្មោះសិស្ស"></div>
-                <div class="input-group"><label>ភេទ</label><select id="newStuGender"><option value="ប្រុស">ប្រុស</option><option value="ស្រី">ស្រី</option></select></div>
+                <div class="input-group">
+                    <label>ភេទ</label>
+                    <select id="newStuGender">
+                        <option value="ប">ប (ប្រុស)</option>
+                        <option value="ស">ស (ស្រី)</option>
+                    </select>
+                </div>
                 <div class="input-group"><label>ថ្ងៃខែឆ្នាំកំណើត</label><input type="date" id="newStuDob"></div>
                 <div class="input-group"><label>ថ្នាក់ទី</label><input type="text" id="newStuGrade" placeholder="ឧ. ១០ ក"></div>
                 <button id="btnAddUpdate" class="btn btn-add" onclick="addOrUpdateStudent()">បញ្ជូនទិន្នន័យ</button>
                 
-                <div style="flex: 0 0 100%; border-top: 1px dashed #444; margin-top: 10px; padding-top: 15px;">
-                    <label style="color: #00d2ff; font-size: 14px; display: block; margin-bottom: 8px;">📥 ឬនាំចូលសិស្សពីឯកសារ Excel (Import):</label>
+                <div style="flex: 0 0 100%; border-top: 1px dashed var(--border-color); margin-top: 10px; padding-top: 15px;">
+                    <label style="color: var(--highlight); font-size: 14px; display: block; margin-bottom: 8px;">📥 ឬនាំចូលសិស្សពីឯកសារ Excel (Import):</label>
                     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                         <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="max-width: 300px;">
                         <button class="btn btn-view" onclick="importFromExcel()" style="background-color: #107c41; height: 40px; padding: 0 20px;">នាំចូលទិន្នន័យ</button>
@@ -222,11 +262,10 @@
             </div>
 
             <div class="bulk-actions">
-                <div id="studentStatsInfo" style="color: #00d2ff; font-size: 15px; font-weight: bold; margin-bottom: 5px;">
+                <div id="studentStatsInfo" style="color: var(--highlight); font-size: 15px; font-weight: bold; margin-bottom: 5px;">
                     សិស្សសរុប៖ ០ នាក់ (ស្រី៖ ០ នាក់ | ប្រុស៖ ០ នាក់)
                 </div>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button class="btn" style="background-color: #f5a524; color: #000;" onclick="sortStudentsAlphabetically()">🔤 តម្រៀបឈ្មោះ (ក-អ)</button>
                     <button class="btn" style="background-color: #f31260; color: #fff;" onclick="deleteAllStudentsFromCloud()">🗑️ លុបសិស្សទាំងអស់</button>
                 </div>
             </div>
@@ -252,10 +291,10 @@
                 <table class="schedule-table">
                     <thead><tr><th>ម៉ោង \ ថ្ងៃ</th><th>ច័ន្ទ</th><th>អង្គារ</th><th>ពុធ</th><th>ព្រហស្បតិ៍</th><th>សុក្រ</th><th>សៅរ៍</th></tr></thead>
                     <tbody id="scheduleBody">
-                        <tr><td style="font-weight:bold; color:#00d2ff;">៧:០០ - ៨:០០</td><td><input type="text" id="sch_1_1"></td><td><input type="text" id="sch_2_1"></td><td><input type="text" id="sch_3_1"></td><td><input type="text" id="sch_4_1"></td><td><input type="text" id="sch_5_1"></td><td><input type="text" id="sch_6_1"></td></tr>
-                        <tr><td style="font-weight:bold; color:#00d2ff;">៨:០០ - ៩:០០</td><td><input type="text" id="sch_1_2"></td><td><input type="text" id="sch_2_2"></td><td><input type="text" id="sch_3_2"></td><td><input type="text" id="sch_4_2"></td><td><input type="text" id="sch_5_2"></td><td><input type="text" id="sch_6_2"></td></tr>
-                        <tr><td style="font-weight:bold; color:#00d2ff;">៩:០០ - ១០:០០</td><td><input type="text" id="sch_1_3"></td><td><input type="text" id="sch_2_3"></td><td><input type="text" id="sch_3_3"></td><td><input type="text" id="sch_4_3"></td><td><input type="text" id="sch_5_3"></td><td><input type="text" id="sch_6_3"></td></tr>
-                        <tr><td style="font-weight:bold; color:#00d2ff;">១០:០០ - ១១:០០</td><td><input type="text" id="sch_1_4"></td><td><input type="text" id="sch_2_4"></td><td><input type="text" id="sch_3_4"></td><td><input type="text" id="sch_4_4"></td><td><input type="text" id="sch_5_4"></td><td><input type="text" id="sch_6_4"></td></tr>
+                        <tr><td style="font-weight:bold; color:var(--highlight);">៧:០០ - ៨:០០</td><td><input type="text" id="sch_1_1"></td><td><input type="text" id="sch_2_1"></td><td><input type="text" id="sch_3_1"></td><td><input type="text" id="sch_4_1"></td><td><input type="text" id="sch_5_1"></td><td><input type="text" id="sch_6_1"></td></tr>
+                        <tr><td style="font-weight:bold; color:var(--highlight);">៨:០០ - ៩:០០</td><td><input type="text" id="sch_1_2"></td><td><input type="text" id="sch_2_2"></td><td><input type="text" id="sch_3_2"></td><td><input type="text" id="sch_4_2"></td><td><input type="text" id="sch_5_2"></td><td><input type="text" id="sch_6_2"></td></tr>
+                        <tr><td style="font-weight:bold; color:var(--highlight);">៩:០០ - ១០:០០</td><td><input type="text" id="sch_1_3"></td><td><input type="text" id="sch_2_3"></td><td><input type="text" id="sch_3_3"></td><td><input type="text" id="sch_4_3"></td><td><input type="text" id="sch_5_3"></td><td><input type="text" id="sch_6_3"></td></tr>
+                        <tr><td style="font-weight:bold; color:var(--highlight);">១០:០០ - ១១:០០</td><td><input type="text" id="sch_1_4"></td><td><input type="text" id="sch_2_4"></td><td><input type="text" id="sch_3_4"></td><td><input type="text" id="sch_4_4"></td><td><input type="text" id="sch_5_4"></td><td><input type="text" id="sch_6_4"></td></tr>
                         <tr><td colspan="7" style="background:#333; color:#fff; font-weight:bold; letter-spacing: 2px;">ម៉ោងសម្រាក (រសៀល)</td></tr>
                         <tr><td style="font-weight:bold; color:#f5a524;">២:០០ - ៣:០០</td><td><input type="text" id="sch_1_5"></td><td><input type="text" id="sch_2_5"></td><td><input type="text" id="sch_3_5"></td><td><input type="text" id="sch_4_5"></td><td><input type="text" id="sch_5_5"></td><td><input type="text" id="sch_6_5"></td></tr>
                         <tr><td style="font-weight:bold; color:#f5a524;">៣:០០ - ៤:០០</td><td><input type="text" id="sch_1_6"></td><td><input type="text" id="sch_2_6"></td><td><input type="text" id="sch_3_6"></td><td><input type="text" id="sch_4_6"></td><td><input type="text" id="sch_5_6"></td><td><input type="text" id="sch_6_6"></td></tr>
@@ -280,7 +319,7 @@
             </div>
             <div class="table-wrapper">
                 <table>
-                    <thead><tr><th>កាលបរិច្ឆេទ (ថ្ងៃ/ខែ/ឆ្នាំ)</th><th>ម៉ោងសិក្សា & មុខវិជ្ជា</th><th>សិស្សវត្តមាន</th><th>សិស្សអវត្តមាន</th><th>សកម្មភាព</th></tr></thead>
+                    <thead><tr><th>កាលបរិច្ឆេទ (ថ្ងៃ/ខែ/ឆ្នាំ)</th><th>ម៉ោងសិក្សា & មុខវិជ្ជា</th><th>វត្តមាន</th><th>សុំច្បាប់</th><th>អត់ច្បាប់</th><th>សកម្មភាព</th></tr></thead>
                     <tbody id="historyTable"></tbody>
                 </table>
             </div>
@@ -301,10 +340,10 @@
                 <button id="btnPrintReport" class="btn btn-print-report" onclick="printMonthlyReport()">🖨️ បោះពុម្ព / ជា PDF</button>
             </div>
             <div class="report-section" id="monthlyReportContainer">
-                <div class="report-header"><h2>របាយការណ៍វត្តមានសិស្ស</h2><h4 id="reportTitleMonth" style="color: #666;"></h4></div>
+                <div class="report-header"><h2>របាយការណ៍វត្តមានសិស្ស</h2><h4 id="reportTitleMonth" style="color: var(--text-muted);"></h4></div>
                 <div class="table-wrapper">
                     <table id="reportTableForExcel">
-                        <thead><tr><th>ល.រ</th><th>អត្តលេខ</th><th style="text-align: left;">ឈ្មោះសិស្ស</th><th>ភេទ</th><th>ថ្នាក់ទី</th><th style="background-color: rgba(23, 201, 100, 0.1); color: #17c964;">វត្តមានសរុប</th><th style="background-color: rgba(243, 18, 96, 0.1); color: #f31260;">អវត្តមានសរុប</th><th>សរុបម៉ោងសិក្សា</th></tr></thead>
+                        <thead><tr><th>ល.រ</th><th>អត្តលេខ</th><th style="text-align: left;">ឈ្មោះសិស្ស</th><th>ភេទ</th><th>ថ្នាក់ទី</th><th style="background-color: rgba(23, 201, 100, 0.1); color: #17c964;">សរុបវត្តមាន</th><th style="background-color: rgba(245, 165, 36, 0.1); color: #f5a524;">សរុបច្បាប់</th><th style="background-color: rgba(243, 18, 96, 0.1); color: #f31260;">សរុបអត់ច្បាប់</th><th>ម៉ោងសរុប</th></tr></thead>
                         <tbody id="monthlyReportBody"></tbody>
                     </table>
                 </div>
@@ -315,6 +354,24 @@
     </div>
 
     <script>
+        // ==========================================
+        // Theme (Light/Dark Mode)
+        // ==========================================
+        function initTheme() {
+            let savedTheme = localStorage.getItem('appTheme') || 'dark';
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-mode');
+                document.getElementById('themeBtn').innerText = '🌙';
+            }
+        }
+        initTheme();
+
+        function toggleTheme() {
+            let isLight = document.body.classList.toggle('light-mode');
+            document.getElementById('themeBtn').innerText = isLight ? '🌙' : '🌞';
+            localStorage.setItem('appTheme', isLight ? 'light' : 'dark');
+        }
+
         // ==========================================
         // ១. ដាក់ FIREBASE CONFIG របស់អ្នកនៅទីនេះ
         // ==========================================
@@ -327,17 +384,14 @@
 		  appId: "1:752231680647:web:0b7cc8ef91208dba940622"
 		};
 
-
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
         let currentUserUid = null; 
-        
         let globalStudents = []; 
         let cloudHistoryData = [];
         let myScheduleData = {}; 
-        let sortAscending = true; // សម្រាប់ចងចាំការតម្រៀប (ក-អ)
 
         const khmerMonths = {"-01-":"មករា", "-02-":"កុម្ភៈ", "-03-":"មីនា", "-04-":"មេសា", "-05-":"ឧសភា", "-06-":"មិថុនា", "-07-":"កក្កដា", "-08-":"សីហា", "-09-":"កញ្ញា", "-10-":"តុលា", "-11-":"វិច្ឆិកា", "-12-":"ធ្នូ"};
         const timeSlotMapping = { "៧:០០ - ៨:០០ (ព្រឹក)": 1, "៨:០០ - ៩:០០ (ព្រឹក)": 2, "៧:០០ - ៩:០០ (ព្រឹក) ២ម៉ោង": 1, "៩:០០ - ១០:០០ (ព្រឹក)": 3, "១០:០០ - ១១:០០ (ព្រឹក)": 4, "៩:០០ - ១១:០០ (ព្រឹក) ២ម៉ោង": 3, "២:០០ - ៣:០០ (រសៀល)": 5, "៣:០០ - ៤:០០ (រសៀល)": 6, "២:០០ - ៤:០០ (រសៀល) ២ម៉ោង": 5 };
@@ -345,7 +399,6 @@
         // ==========================================
         // ២. Authentication
         // ==========================================
-        let isLoginMode = true;
         auth.onAuthStateChanged((user) => {
             if (user) {
                 currentUserUid = user.uid; 
@@ -359,7 +412,7 @@
             }
         });
 
-        function toggleAuthMode() { isLoginMode = !isLoginMode; document.getElementById("loginBox").style.display = isLoginMode ? "block" : "none"; document.getElementById("registerBox").style.display = isLoginMode ? "none" : "block"; }
+        function toggleAuthMode() { let isLMode = document.getElementById("loginBox").style.display !== "none"; document.getElementById("loginBox").style.display = isLMode ? "none" : "block"; document.getElementById("registerBox").style.display = isLMode ? "block" : "none"; }
         function registerUser() { let user = document.getElementById("regUsername").value.trim(); let pass = document.getElementById("regPassword").value.trim(); if (user === "" || pass === "") { alert("សូមបញ្ចូលឈ្មោះគណនី និងពាក្យសម្ងាត់!"); return; } let fakeEmail = user + "@schoolapp.com"; auth.createUserWithEmailAndPassword(fakeEmail, pass).then(() => { alert("បង្កើតគណនីបានជោគជ័យ!"); document.getElementById("regUsername").value = ""; document.getElementById("regPassword").value = ""; }).catch((error) => { alert("បញ្ហា: " + error.message); }); }
         function loginUser() { let user = document.getElementById("loginUsername").value.trim(); let pass = document.getElementById("loginPassword").value.trim(); if (user === "" || pass === "") { alert("សូមបញ្ចូលឈ្មោះគណនី និងពាក្យសម្ងាត់!"); return; } let fakeEmail = user + "@schoolapp.com"; auth.signInWithEmailAndPassword(fakeEmail, pass).then(() => { document.getElementById("loginUsername").value = ""; document.getElementById("loginPassword").value = ""; }).catch(() => { alert("ឈ្មោះគណនី ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវទេ!"); }); }
         function logoutUser() { if(confirm("តើអ្នកពិតជាចង់ចាកចេញមែនទេ?")) auth.signOut(); }
@@ -379,7 +432,7 @@
         function autoDetectSubject() { let dateVal = document.getElementById('date').value; let timeVal = document.getElementById('timeSlot').value; let subjectInput = document.getElementById('currentSubject'); if (!dateVal || !timeVal) { subjectInput.value = ""; return; } let d = new Date(dateVal); let dayIndex = d.getDay(); if (dayIndex === 0) { subjectInput.value = "ថ្ងៃអាទិត្យ (ឈប់សម្រាក)"; return; } let timeIndex = timeSlotMapping[timeVal]; if (!timeIndex) { subjectInput.value = "ម៉ោងមិនត្រឹមត្រូវ"; return; } let key = `sch_${dayIndex}_${timeIndex}`; subjectInput.value = myScheduleData[key] || "មិនមានមុខវិជ្ជា"; }
 
         // ==========================================
-        // ៤. គ្រប់គ្រងសិស្ស, ស្ថិតិ, លុបទាំងអស់, តម្រៀប
+        // ៤. គ្រប់គ្រងសិស្ស, ស្ថិតិ, តម្រៀបស្វ័យប្រវត្តិ
         // ==========================================
         let editingStudentDocId = null; 
         function formatDateToKhmer(dateStr) { if (!dateStr || dateStr === "មិនបានបញ្ជាក់") return dateStr; let parts = dateStr.split('-'); if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`; return dateStr; }
@@ -387,86 +440,62 @@
 
         function loadStudentsFromCloud() {
             if(!currentUserUid) return;
-            // ទាញយកធម្មតា បន្ទាប់មកយកមក Render តាមក្រោយ
-            getUserRef().collection("students").orderBy("id", "asc").get().then((querySnapshot) => {
+            getUserRef().collection("students").get().then((querySnapshot) => {
                 globalStudents = []; 
                 querySnapshot.forEach((doc) => {
                     let data = doc.data(); data.docId = doc.id; globalStudents.push(data);
                 });
-                renderStudentTables(); // ប្រើមុខងារ Render ដាច់ដោយឡែក
+                
+                // តម្រៀបឈ្មោះស្វ័យប្រវត្តិ (ក-អ)
+                globalStudents.sort((a, b) => a.name.localeCompare(b.name, 'km'));
+                
+                renderStudentTables(); 
             }).catch((error) => { console.log("Error loading students: ", error); });
         }
 
-        // មុខងារបង្ហាញសិស្សចូលក្នុងតារាងទាំង២ និងគណនាស្ថិតិ
         function renderStudentTables() {
             let attBody = document.getElementById("attendanceStudentTableBody");
             let mgmtBody = document.getElementById("manageStudentTableBody");
             attBody.innerHTML = ""; mgmtBody.innerHTML = ""; 
             
-            // ១. គណនាស្ថិតិសិស្ស
+            // គណនាស្ថិតិដោយចាប់យកទាំង "ស", "ស្រី"
             let total = globalStudents.length;
-            let femaleCount = globalStudents.filter(s => s.gender === 'ស្រី').length;
+            let femaleCount = globalStudents.filter(s => s.gender === 'ស្រី' || s.gender === 'ស').length;
             let maleCount = total - femaleCount;
             document.getElementById("studentStatsInfo").innerText = `សិស្សសរុប៖ ${total} នាក់ (ស្រី៖ ${femaleCount} នាក់ | ប្រុស៖ ${maleCount} នាក់)`;
 
-            // ២. បង្ហាញសិស្សចូលតារាង
             if(total === 0) { 
-                attBody.innerHTML = `<tr><td colspan="5" style="color:#aaa; padding:20px;">មិនទាន់មានសិស្សទេ សូមទៅកាន់ផ្ទាំងគ្រប់គ្រងសិស្ស!</td></tr>`; 
-                mgmtBody.innerHTML = `<tr><td colspan="7" style="color:#aaa; padding:20px;">មិនទាន់មានសិស្សទេ សូមបញ្ចូលថ្មី ឬ Import!</td></tr>`; 
+                attBody.innerHTML = `<tr><td colspan="5" style="color:var(--text-muted); padding:20px;">មិនទាន់មានសិស្សទេ សូមទៅកាន់ផ្ទាំងគ្រប់គ្រងសិស្ស!</td></tr>`; 
+                mgmtBody.innerHTML = `<tr><td colspan="7" style="color:var(--text-muted); padding:20px;">មិនទាន់មានសិស្សទេ សូមបញ្ចូលថ្មី ឬ Import!</td></tr>`; 
                 return; 
             }
 
             let index = 1;
             globalStudents.forEach((data) => {
-                let attRow = `<tr><td>${index}</td><td class="stu-id">${data.id}</td><td class="stu-name" style="text-align: left; font-weight: bold;">${data.name}</td><td>${data.gender}</td><td><div class="status-btns"><button class="btn btn-present" onclick="markStatus(this, 'present')">វត្តមាន</button> <button class="btn btn-absent" onclick="markStatus(this, 'absent')">អវត្តមាន</button></div></td></tr>`;
+                // កំណត់ទម្រង់បង្ហាញឲ្យខ្លី (ស និង ប)
+                let displayGender = (data.gender === 'ប្រុស') ? 'ប' : ((data.gender === 'ស្រី') ? 'ស' : data.gender);
+
+                let attRow = `<tr><td>${index}</td><td class="stu-id">${data.id}</td><td class="stu-name" style="text-align: left; font-weight: bold;">${data.name}</td><td>${displayGender}</td><td><div class="status-btns"><button class="btn btn-present" onclick="markStatus(this, 'present')">វត្តមាន</button> <button class="btn btn-excused" onclick="markStatus(this, 'excused')">ច្បាប់</button> <button class="btn btn-unexcused" onclick="markStatus(this, 'unexcused')">អត់ច្បាប់</button></div></td></tr>`;
                 attBody.innerHTML += attRow;
 
-                let mgmtRow = `<tr><td>${index}</td><td class="stu-id">${data.id}</td><td class="stu-name" style="text-align: left; font-weight: bold;">${data.name}</td><td>${data.gender}</td><td>${data.dob}</td><td>${data.grade}</td><td><div class="action-btns"><button class="btn btn-edit" onclick="editStudent('${data.docId}')">កែប្រែ</button> <button class="btn btn-delete" onclick="deleteStudent('${data.docId}')">លុប</button></div></td></tr>`;
+                let mgmtRow = `<tr><td>${index}</td><td class="stu-id">${data.id}</td><td class="stu-name" style="text-align: left; font-weight: bold;">${data.name}</td><td>${displayGender}</td><td>${data.dob}</td><td>${data.grade}</td><td><div class="action-btns"><button class="btn btn-edit" onclick="editStudent('${data.docId}')">កែប្រែ</button> <button class="btn btn-delete" onclick="deleteStudent('${data.docId}')">លុប</button></div></td></tr>`;
                 mgmtBody.innerHTML += mgmtRow;
                 index++;
             });
         }
 
-        // មុខងារថ្មី៖ តម្រៀបឈ្មោះសិស្សតាមអក្ខរក្រមខ្មែរ (ក-អ)
-        function sortStudentsAlphabetically() {
-            if(globalStudents.length === 0) return;
-            
-            globalStudents.sort((a, b) => {
-                // localeCompare('km') ជួយឲ្យវាស្គាល់អក្សរខ្មែរត្រឹមត្រូវ
-                if(sortAscending) {
-                    return a.name.localeCompare(b.name, 'km');
-                } else {
-                    return b.name.localeCompare(a.name, 'km');
-                }
-            });
-            
-            sortAscending = !sortAscending; // ដូរជម្រើសពេលចុចលើកក្រោយ
-            renderStudentTables(); // បង្ហាញចូលតារាងវិញ
-        }
-
-        // មុខងារថ្មី៖ លុបសិស្សទាំងអស់ចេញពី Cloud
         function deleteAllStudentsFromCloud() {
             if(!currentUserUid) return;
             if(globalStudents.length === 0) { alert("គ្មានទិន្នន័យសិស្សសម្រាប់លុបទេ!"); return; }
-
-            let confirmMsg = "⚠️ តើអ្នកពិតជាចង់លុបឈ្មោះសិស្ស 'ទាំងអស់' ចេញពីប្រព័ន្ធមែនទេ?\nបញ្ជាក់៖ ទិន្នន័យដែលលុបរួចមិនអាចទាញយកវិញបានទេ!";
-            
-            if(confirm(confirmMsg)) {
+            if(confirm("⚠️ តើអ្នកពិតជាចង់លុបឈ្មោះសិស្ស 'ទាំងអស់' ចេញពីប្រព័ន្ធមែនទេ?\nបញ្ជាក់៖ ទិន្នន័យដែលលុបរួចមិនអាចទាញយកវិញបានទេ!")) {
                 let batch = db.batch();
-                
-                // រៀបចំបញ្ជាលុបសម្រាប់សិស្សម្នាក់ៗ
                 globalStudents.forEach(student => {
                     let docRef = getUserRef().collection("students").doc(student.docId);
                     batch.delete(docRef);
                 });
-
-                // បញ្ជូនបញ្ជាលុបទៅកាន់ Firebase ក្នុងពេលតែមួយ
                 batch.commit().then(() => {
-                    alert("ទិន្នន័យសិស្សទាំងអស់ត្រូវបានលុបដោយជោគជ័យ!");
-                    loadStudentsFromCloud(); // ទាញទិន្នន័យថ្មី (ទទេ) មកបង្ហាញ
-                }).catch(error => {
-                    alert("មានបញ្ហាក្នុងការលុប: " + error.message);
-                });
+                    alert("ទិន្នន័យសិស្សទាំងអស់ត្រូវបានលុបដោយជោគជ័យ!"); loadStudentsFromCloud(); 
+                }).catch(error => { alert("មានបញ្ហាក្នុងការលុប: " + error.message); });
             }
         }
 
@@ -479,10 +508,27 @@
                 let data = new Uint8Array(e.target.result); let workbook = XLSX.read(data, {type: 'array'}); let worksheet = workbook.Sheets[workbook.SheetNames[0]];
                 let json = XLSX.utils.sheet_to_json(worksheet, {header: 1, raw: false});
                 if (json.length <= 1) { alert("ឯកសារ Excel គ្មានទិន្នន័យទេ!"); return; }
+                
                 let newStudents = [];
                 for (let i = 1; i < json.length; i++) {
                     let row = json[i]; if (!row || row.length === 0 || !row[1]) continue; 
-                    let id = row[0] ? String(row[0]).trim() : `S${Date.now() + i}`; let name = String(row[1]).trim(); let gender = row[2] ? String(row[2]).trim() : "មិនបានបញ្ជាក់"; let dob = row[3] ? String(row[3]).trim() : "មិនបានបញ្ជាក់"; let grade = row[4] ? String(row[4]).trim() : "មិនបានបញ្ជាក់";
+                    let id = row[0] ? String(row[0]).trim() : `S${Date.now() + i}`; 
+                    let name = String(row[1]).trim(); 
+                    
+                    // បំប្លែងភេទស្វ័យប្រវត្តិ
+                    let rawGender = row[2] ? String(row[2]).trim() : "មិនបានបញ្ជាក់"; 
+                    let gender = "មិនបានបញ្ជាក់";
+                    if (rawGender === "ប្រុស" || rawGender === "ប" || rawGender.toLowerCase() === "m" || rawGender.toLowerCase() === "b") {
+                        gender = "ប";
+                    } else if (rawGender === "ស្រី" || rawGender === "ស" || rawGender.toLowerCase() === "f" || rawGender.toLowerCase() === "s") {
+                        gender = "ស";
+                    } else {
+                        gender = rawGender;
+                    }
+
+                    let dob = row[3] ? String(row[3]).trim() : "មិនបានបញ្ជាក់"; 
+                    let grade = row[4] ? String(row[4]).trim() : "មិនបានបញ្ជាក់";
+                    
                     newStudents.push({ id: id, name: name, gender: gender, dob: dob, grade: grade, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
                 }
                 if (newStudents.length === 0) { alert("រកមិនឃើញទិន្នន័យសិស្សត្រឹមត្រូវទេ!"); return; }
@@ -497,9 +543,15 @@
 
         function addOrUpdateStudent() {
             if(!currentUserUid) return;
-            let id = document.getElementById("newStuId").value.trim(); let name = document.getElementById("newStuName").value.trim(); let gender = document.getElementById("newStuGender").value; let dobRaw = document.getElementById("newStuDob").value; let grade = document.getElementById("newStuGrade").value.trim();
+            let id = document.getElementById("newStuId").value.trim(); 
+            let name = document.getElementById("newStuName").value.trim(); 
+            let gender = document.getElementById("newStuGender").value; 
+            let dobRaw = document.getElementById("newStuDob").value; 
+            let grade = document.getElementById("newStuGrade").value.trim();
+            
             if(id === "" || name === "") { alert("សូមបញ្ចូលអត្តលេខ និងឈ្មោះសិស្ស!"); return; }
             let dob = dobRaw ? formatDateToKhmer(dobRaw) : "មិនបានបញ្ជាក់"; if(grade === "") grade = "មិនបានបញ្ជាក់";
+            
             let studentData = { id: id, name: name, gender: gender, dob: dob, grade: grade, timestamp: firebase.firestore.FieldValue.serverTimestamp() };
             let btn = document.getElementById("btnAddUpdate"); btn.innerText = "កំពុងរក្សាទុក..."; btn.disabled = true;
 
@@ -509,34 +561,121 @@
                 getUserRef().collection("students").add(studentData).then(() => { btn.innerText = "បញ្ជូនទិន្នន័យ"; btn.disabled = false; document.getElementById("newStuId").value = ""; document.getElementById("newStuName").value = ""; document.getElementById("newStuDob").value = ""; document.getElementById("newStuGrade").value = ""; loadStudentsFromCloud(); });
             }
         }
-        function editStudent(docId) { let student = globalStudents.find(s => s.docId === docId); if(student) { document.getElementById("newStuId").value = student.id; document.getElementById("newStuName").value = student.name; document.getElementById("newStuGender").value = student.gender; document.getElementById("newStuDob").value = parseDateFromKhmer(student.dob); document.getElementById("newStuGrade").value = (student.grade === "មិនបានបញ្ជាក់") ? "" : student.grade; editingStudentDocId = docId; let btn = document.getElementById("btnAddUpdate"); btn.innerText = "✓ រក្សាទុកការកែប្រែ"; btn.classList.replace("btn-add", "btn-update"); window.scrollTo({ top: 0, behavior: 'smooth' }); } }
+        
+        function editStudent(docId) { 
+            let student = globalStudents.find(s => s.docId === docId); 
+            if(student) { 
+                document.getElementById("newStuId").value = student.id; 
+                document.getElementById("newStuName").value = student.name; 
+                
+                let g = student.gender;
+                if(g === 'ប្រុស') g = 'ប'; if(g === 'ស្រី') g = 'ស';
+                document.getElementById("newStuGender").value = g; 
+                
+                document.getElementById("newStuDob").value = parseDateFromKhmer(student.dob); 
+                document.getElementById("newStuGrade").value = (student.grade === "មិនបានបញ្ជាក់") ? "" : student.grade; 
+                editingStudentDocId = docId; let btn = document.getElementById("btnAddUpdate"); btn.innerText = "✓ រក្សាទុកការកែប្រែ"; btn.classList.replace("btn-add", "btn-update"); window.scrollTo({ top: 0, behavior: 'smooth' }); 
+            } 
+        }
         function deleteStudent(docId) { if(confirm("តើអ្នកពិតជាចង់លុបសិស្សនេះចេញពីប្រព័ន្ធមែនទេ?")) { getUserRef().collection("students").doc(docId).delete().then(() => { loadStudentsFromCloud(); }); } }
-
         function filterTable(inputId, tbodyId) { let input = document.getElementById(inputId).value.toLowerCase(); let rows = document.querySelectorAll(`#${tbodyId} tr`); rows.forEach(row => { let id = row.querySelector(".stu-id")?.innerText.toLowerCase() || ""; let name = row.querySelector(".stu-name")?.innerText.toLowerCase() || ""; if (id.includes(input) || name.includes(input)) row.style.display = ""; else row.style.display = "none"; }); }
-        function markStatus(button, status) { let row = button.closest("tr"); let pBtn = row.querySelector('.btn-present'); let aBtn = row.querySelector('.btn-absent'); pBtn.classList.remove('active-present'); aBtn.classList.remove('active-absent'); if (status === 'present') pBtn.classList.add('active-present'); else if (status === 'absent') aBtn.classList.add('active-absent'); }
-        function markAllStatus(status) { let rows = document.querySelectorAll('#attendanceStudentTableBody tr'); rows.forEach(row => { if (row.style.display !== 'none' && row.querySelector('.btn-present')) { let pBtn = row.querySelector('.btn-present'); let aBtn = row.querySelector('.btn-absent'); pBtn.classList.remove('active-present'); aBtn.classList.remove('active-absent'); if (status === 'present') { pBtn.classList.add('active-present'); } else if (status === 'absent') { aBtn.classList.add('active-absent'); } } }); }
+        
+        // ==========================================
+        // ៥. កត់វត្តមាន
+        // ==========================================
+        function markStatus(button, status) { 
+            let row = button.closest("tr"); 
+            let pBtn = row.querySelector('.btn-present'); let eBtn = row.querySelector('.btn-excused'); let aBtn = row.querySelector('.btn-unexcused'); 
+            pBtn.classList.remove('active-present'); eBtn.classList.remove('active-excused'); aBtn.classList.remove('active-unexcused'); 
+            
+            if (status === 'present') pBtn.classList.add('active-present'); 
+            else if (status === 'excused') eBtn.classList.add('active-excused'); 
+            else if (status === 'unexcused') aBtn.classList.add('active-unexcused'); 
+        }
+
+        function markAllStatus(status) { 
+            let rows = document.querySelectorAll('#attendanceStudentTableBody tr'); 
+            rows.forEach(row => { 
+                if (row.style.display !== 'none' && row.querySelector('.btn-present')) { 
+                    let pBtn = row.querySelector('.btn-present'); let eBtn = row.querySelector('.btn-excused'); let aBtn = row.querySelector('.btn-unexcused'); 
+                    pBtn.classList.remove('active-present'); eBtn.classList.remove('active-excused'); aBtn.classList.remove('active-unexcused'); 
+                    if (status === 'present') pBtn.classList.add('active-present'); 
+                    else if (status === 'excused') eBtn.classList.add('active-excused'); 
+                    else if (status === 'unexcused') aBtn.classList.add('active-unexcused'); 
+                } 
+            }); 
+        }
 
         function saveData() {
             if(!currentUserUid) return;
             const rawDate = document.getElementById('date').value; const timeSlot = document.getElementById('timeSlot').value; const subject = document.getElementById('currentSubject').value; 
             if (!rawDate) { alert("សូមជ្រើសរើសកាលបរិច្ឆេទជាមុនសិន!"); return; } if (!timeSlot) { alert("សូមជ្រើសរើសម៉ោងសិក្សាជាមុនសិន!"); return; }
-            const rows = document.querySelectorAll('#attendanceStudentTableBody tr'); let totalPresent = 0; let totalAbsent = 0; let absentNames = [];
-            rows.forEach(row => { let nameElement = row.querySelector('.stu-name'); if (nameElement) { let name = nameElement.innerText; let isPresent = row.querySelector('.active-present'); let isAbsent = row.querySelector('.active-absent'); if (isPresent) { totalPresent++; } else if (isAbsent) { totalAbsent++; absentNames.push(name); } } });
-            if (totalPresent + totalAbsent === 0) { alert("សូមគូសវត្តមានសិស្សយ៉ាងហោចណាស់ម្នាក់!"); return; }
+            
+            const rows = document.querySelectorAll('#attendanceStudentTableBody tr'); 
+            let totalPresent = 0; let totalExcused = 0; let totalUnexcused = 0; 
+            let excusedNames = []; let unexcusedNames = [];
+            
+            rows.forEach(row => { 
+                let nameElement = row.querySelector('.stu-name'); 
+                if (nameElement) { 
+                    let name = nameElement.innerText; 
+                    let isPresent = row.querySelector('.active-present'); 
+                    let isExcused = row.querySelector('.active-excused'); 
+                    let isUnexcused = row.querySelector('.active-unexcused'); 
+
+                    if (isPresent) { totalPresent++; } 
+                    else if (isExcused) { totalExcused++; excusedNames.push(name); } 
+                    else if (isUnexcused) { totalUnexcused++; unexcusedNames.push(name); }
+                } 
+            });
+
+            if (totalPresent + totalExcused + totalUnexcused === 0) { alert("សូមគូសវត្តមានសិស្សយ៉ាងហោចណាស់ម្នាក់!"); return; }
+            
             document.querySelector('.btn-save').innerText = "កំពុងរក្សាទុកទៅ Cloud...";
             
-            getUserRef().collection("attendanceHistory").add({ date: rawDate, time: timeSlot, subject: subject, totalPresent: totalPresent, totalAbsent: totalAbsent, absentNames: absentNames, timestamp: firebase.firestore.FieldValue.serverTimestamp() }).then(() => { alert("រក្សាទុកជោគជ័យ!"); resetFormButtons(rows); loadHistoryFromCloud(); }).catch((error) => { alert("បញ្ហា: " + error.message); resetFormButtons(rows); });
+            getUserRef().collection("attendanceHistory").add({ 
+                date: rawDate, time: timeSlot, subject: subject, 
+                totalPresent: totalPresent, totalExcused: totalExcused, totalUnexcused: totalUnexcused, 
+                excusedNames: excusedNames, unexcusedNames: unexcusedNames, 
+                timestamp: firebase.firestore.FieldValue.serverTimestamp() 
+            }).then(() => { 
+                alert("រក្សាទុកជោគជ័យ!"); resetFormButtons(rows); loadHistoryFromCloud(); 
+            }).catch((error) => { alert("បញ្ហា: " + error.message); resetFormButtons(rows); });
         }
-        function resetFormButtons(rows) { rows.forEach(row => { let pBtn = row.querySelector('.btn-present'); let aBtn = row.querySelector('.btn-absent'); if(pBtn) pBtn.classList.remove('active-present'); if(aBtn) aBtn.classList.remove('active-absent'); }); document.querySelector('.btn-save').innerText = "💾 រក្សាទុកទិន្នន័យអវត្តមាន"; }
+
+        function resetFormButtons(rows) { rows.forEach(row => { let pBtn = row.querySelector('.btn-present'); let eBtn = row.querySelector('.btn-excused'); let aBtn = row.querySelector('.btn-unexcused'); if(pBtn) pBtn.classList.remove('active-present'); if(eBtn) eBtn.classList.remove('active-excused'); if(aBtn) aBtn.classList.remove('active-unexcused'); }); document.querySelector('.btn-save').innerText = "💾 រក្សាទុកទិន្នន័យអវត្តមាន"; }
 
         // ==========================================
-        // ៥. ប្រវត្តិ និង របាយការណ៍ 
+        // ៦. ប្រវត្តិ និង របាយការណ៍ 
         // ==========================================
         function loadHistoryFromCloud() { if(!currentUserUid) return; getUserRef().collection("attendanceHistory").orderBy("date", "desc").get().then((querySnapshot) => { cloudHistoryData = []; querySnapshot.forEach((doc) => { let data = doc.data(); data.docId = doc.id; cloudHistoryData.push(data); }); filterHistoryAdvanced(); }).catch((error) => { console.log("Error:", error); }); }
-        function renderHistoryTable(dataArray) { let tableBody = document.getElementById("historyTable"); tableBody.innerHTML = ""; if (dataArray.length === 0) { tableBody.innerHTML = `<tr><td colspan="5" style="color: #666; padding: 30px;">មិនមានទិន្នន័យទេ</td></tr>`; return; } dataArray.forEach(record => { let namesString = record.absentNames.length > 0 ? record.absentNames.join(', ') : 'គ្មាន'; let displayDate = formatDateToKhmer(record.date); let displaySubject = record.subject ? record.subject : "មិនមានបញ្ជាក់"; let row = `<tr><td>${displayDate}</td><td style="color: #00d2ff;">${record.time}<br><span style="color:#17c964; font-size:12px;">(${displaySubject})</span></td><td style="color: #17c964; font-weight: bold;">${record.totalPresent}</td><td style="color: #f31260; font-weight: bold;">${record.totalAbsent}</td><td><button class="btn btn-view" onclick="viewDetails('${displayDate}', '${record.time}', '${displaySubject}', '${namesString}')">មើលលម្អិត</button></td></tr>`; tableBody.innerHTML += row; }); }
+        
+        function renderHistoryTable(dataArray) { 
+            let tableBody = document.getElementById("historyTable"); tableBody.innerHTML = ""; 
+            if (dataArray.length === 0) { tableBody.innerHTML = `<tr><td colspan="6" style="color: var(--text-muted); padding: 30px;">មិនមានទិន្នន័យទេ</td></tr>`; return; } 
+            dataArray.forEach(record => { 
+                let excCount = record.totalExcused || 0;
+                let unexcCount = record.totalUnexcused !== undefined ? record.totalUnexcused : (record.totalAbsent || 0);
+                
+                let excStr = (record.excusedNames && record.excusedNames.length > 0) ? record.excusedNames.join(', ') : 'គ្មាន';
+                let unexcStr = (record.unexcusedNames && record.unexcusedNames.length > 0) ? record.unexcusedNames.join(', ') : ((record.absentNames && record.absentNames.length > 0) ? record.absentNames.join(', ') : 'គ្មាន');
+
+                let displayDate = formatDateToKhmer(record.date); let displaySubject = record.subject ? record.subject : "មិនមានបញ្ជាក់"; 
+                let row = `<tr>
+                    <td>${displayDate}</td>
+                    <td style="color: var(--highlight);">${record.time}<br><span style="color:#17c964; font-size:12px;">(${displaySubject})</span></td>
+                    <td style="color: #17c964; font-weight: bold;">${record.totalPresent || 0}</td>
+                    <td style="color: #f5a524; font-weight: bold;">${excCount}</td>
+                    <td style="color: #f31260; font-weight: bold;">${unexcCount}</td>
+                    <td><button class="btn btn-view" onclick="viewDetails('${displayDate}', '${record.time}', '${displaySubject}', '${excStr}', '${unexcStr}')">មើលលម្អិត</button></td>
+                </tr>`; 
+                tableBody.innerHTML += row; 
+            }); 
+        }
+
         function filterHistoryAdvanced() { let year = document.getElementById("histFilterYear").value; let month = document.getElementById("histFilterMonth").value; let filteredData = cloudHistoryData; if (year !== "") filteredData = filteredData.filter(record => record.date.startsWith(year)); if (month !== "") filteredData = filteredData.filter(record => record.date.includes(month)); renderHistoryTable(filteredData); }
         function resetHistoryFilter() { document.getElementById("histFilterYear").value = ""; document.getElementById("histFilterMonth").value = ""; renderHistoryTable(cloudHistoryData); }
-        function viewDetails(date, time, subject, namesString) { alert(`📅 ថ្ងៃទី: ${date}\n⏰ ម៉ោង: ${time}\n📚 មុខវិជ្ជា: ${subject}\n\n👉 សិស្សអវត្តមាន:\n${namesString}`); }
+        function viewDetails(date, time, subject, excStr, unexcStr) { alert(`📅 ថ្ងៃទី: ${date}\n⏰ ម៉ោង: ${time}\n📚 មុខវិជ្ជា: ${subject}\n\n📄 សុំច្បាប់:\n${excStr}\n\n❌ អត់ច្បាប់:\n${unexcStr}`); }
         
         function deleteHistoryFromCloud() { 
             if(!currentUserUid) return;
@@ -553,18 +692,39 @@
             if (filteredHistory.length === 0) { alert("មិនមានទិន្នន័យអវត្តមានក្នុងកំលុងពេលនេះទេ!"); document.getElementById('monthlyReportContainer').style.display = 'none'; document.getElementById('btnPrintReport').style.display = 'none'; document.getElementById('btnExportExcel').style.display = 'none'; return; }
 
             let totalSessionsInMonth = filteredHistory.length; 
-            let studentsData = globalStudents.map(s => ({ id: s.id, name: s.name, gender: s.gender, grade: s.grade, presentCount: 0, absentCount: 0 }));
-            studentsData.forEach(student => { filteredHistory.forEach(session => { if (session.absentNames && session.absentNames.includes(student.name)) student.absentCount++; else student.presentCount++; }); });
+            let studentsData = globalStudents.map(s => ({ id: s.id, name: s.name, gender: s.gender, grade: s.grade, presentCount: 0, excusedCount: 0, unexcusedCount: 0 }));
+            
+            studentsData.forEach(student => { 
+                filteredHistory.forEach(session => { 
+                    let isExcused = session.excusedNames && session.excusedNames.includes(student.name);
+                    let isUnexcused = session.unexcusedNames && session.unexcusedNames.includes(student.name);
+                    let isLegacyAbsent = session.absentNames && session.absentNames.includes(student.name); 
+
+                    if (isExcused) { student.excusedCount++; } 
+                    else if (isUnexcused || isLegacyAbsent) { student.unexcusedCount++; } 
+                    else { student.presentCount++; }
+                }); 
+            });
 
             let tbody = document.getElementById('monthlyReportBody'); tbody.innerHTML = "";
-            studentsData.forEach((student, index) => { let row = `<tr><td>${index + 1}</td><td>${student.id}</td><td style="text-align: left; font-weight: bold;">${student.name}</td><td>${student.gender}</td><td>${student.grade}</td><td style="color: #17c964; font-weight: bold; font-size: 16px;">${student.presentCount}</td><td style="color: #f31260; font-weight: bold; font-size: 16px;">${student.absentCount}</td><td style="color: #00d2ff; font-weight: bold;">${totalSessionsInMonth}</td></tr>`; tbody.innerHTML += row; });
+            studentsData.forEach((student, index) => { 
+                let displayGender = (student.gender === 'ប្រុស') ? 'ប' : ((student.gender === 'ស្រី') ? 'ស' : student.gender);
+                let row = `<tr>
+                    <td>${index + 1}</td><td>${student.id}</td><td style="text-align: left; font-weight: bold;">${student.name}</td><td>${displayGender}</td><td>${student.grade}</td>
+                    <td style="color: #17c964; font-weight: bold; font-size: 16px;">${student.presentCount}</td>
+                    <td style="color: #f5a524; font-weight: bold; font-size: 16px;">${student.excusedCount}</td>
+                    <td style="color: #f31260; font-weight: bold; font-size: 16px;">${student.unexcusedCount}</td>
+                    <td style="color: var(--highlight); font-weight: bold;">${totalSessionsInMonth}</td>
+                </tr>`; 
+                tbody.innerHTML += row; 
+            });
 
             let titleText = "";
             if (year !== "" && month !== "") { titleText = `ប្រចាំខែ ${khmerMonths[month]} ឆ្នាំ ${year}`; } else if (year !== "") { titleText = `ប្រចាំឆ្នាំ ${year} ពេញមួយឆ្នាំ`; } else if (month !== "") { titleText = `ប្រចាំខែ ${khmerMonths[month]} (សរុបគ្រប់ឆ្នាំ)`; }
             document.getElementById('reportTitleMonth').innerText = titleText; document.getElementById('monthlyReportContainer').style.display = 'block'; document.getElementById('btnPrintReport').style.display = 'inline-flex'; document.getElementById('btnExportExcel').style.display = 'inline-flex'; 
         }
 
-        function exportToExcel() { let table = document.getElementById("reportTableForExcel"); let titleText = document.getElementById("reportTitleMonth").innerText; let ws = XLSX.utils.table_to_sheet(table); ws['!cols'] = [ { wch: 6 }, { wch: 15 }, { wch: 30 }, { wch: 10 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 18 } ]; let wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "របាយការណ៍សិស្ស"); let fileName = "របាយការណ៍អវត្តមាន_" + titleText.replace(/[\/\s]/g, "_") + ".xlsx"; XLSX.writeFile(wb, fileName); }
+        function exportToExcel() { let table = document.getElementById("reportTableForExcel"); let titleText = document.getElementById("reportTitleMonth").innerText; let ws = XLSX.utils.table_to_sheet(table); ws['!cols'] = [ { wch: 6 }, { wch: 15 }, { wch: 30 }, { wch: 10 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 } ]; let wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "របាយការណ៍សិស្ស"); let fileName = "របាយការណ៍អវត្តមាន_" + titleText.replace(/[\/\s]/g, "_") + ".xlsx"; XLSX.writeFile(wb, fileName); }
         function printDailyReport() { document.body.classList.add('print-daily'); window.print(); setTimeout(() => { document.body.classList.remove('print-daily'); }, 1000); }
         function printMonthlyReport() { document.body.classList.add('print-monthly'); window.print(); setTimeout(() => { document.body.classList.remove('print-monthly'); }, 1000); }
     </script>
